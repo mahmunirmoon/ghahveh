@@ -248,6 +248,26 @@ body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
 
+/* ---------- Persian (fa) ---------- */
+html[lang="fa"] {
+  --font-display: "Lalezar", "Fraunces", Georgia, serif;
+  --font-body: "Vazirmatn", "Karla", "Segoe UI", Tahoma, sans-serif;
+}
+/* Persian is cursive — letter-spacing breaks letter joining */
+html[lang="fa"] [class*="tracking-"] { letter-spacing: 0 !important; }
+html[lang="fa"] [class*="font-mono"] { font-family: var(--font-body) !important; }
+html[lang="fa"] em { font-style: normal; }
+html[lang="fa"] h1, html[lang="fa"] h2, html[lang="fa"] h3, html[lang="fa"] h4 { line-height: 1.35; }
+html[lang="fa"] .mask-line { padding-bottom: 0.24em; }
+html[lang="fa"] .ticker-track { animation-direction: reverse; }
+
+/* drawer slides from the inline-end side in both directions */
+@keyframes drawer-in-rtl {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+html[dir="rtl"] .drawer-in { animation-name: drawer-in-rtl; }
+
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

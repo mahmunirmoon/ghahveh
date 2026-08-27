@@ -2,15 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   PRODUCTS,
   priceFor,
+  searchHay,
   type Product,
-  type Category,
   type Weight,
   type Grind,
   type CartItem,
 } from "./data/products";
 import { useLocalStorage } from "./lib/hooks";
+import { I18nProvider, useI18n } from "./i18n";
 import { BackgroundFX, NoiseLayer, Ticker, Header, Footer } from "./components/Chrome";
-import { Masthead, FilterBar, Shelf, LedgerBand, type SortKey } from "./components/Shop";
+import { Masthead, FilterBar, Shelf, LedgerBand, type SortKey, type CategorySel } from "./components/Shop";
 import {
   ProductDetail,
   CartDrawer,
@@ -20,10 +21,22 @@ import {
   type Toast,
 } from "./components/Overlays";
 
-export default function App() {
+/** Normalizes a search query across both languages
+ *  (Arabic yeh/kaf → Persian, drops ZWNJ & LRM/RLM marks). */
+function normalize(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[يى]/g, "ی")
+    .replace(/ك/g, "ک")
+    .replace(/[\u200c\u200e\u200f]/g, "");
+}
+
+function Store() {
+  const { t, bi } = useI18n();
+
   /* ---------- catalog state ---------- */
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<"All" | Category>("All");
+  const [category, setCategory] = useState<CategorySel>("all");
   const [sort, setSort] = useState<SortKey>("featured");
 
   /* ---------- overlay state ---------- */
@@ -32,13 +45,13 @@ export default function App() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   /* ---------- cart ---------- */
-  const [cart, setCart] = useLocalStorage<CartItem[]>("eo-crate-v1", []);
+  const [cart, setCart] = useLocalStorage<CartItem[]>("eo-crate-v2", []);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const toast = useCallback((msg: string) => {
     const id = Date.now() + Math.random();
-    setToasts((t) => [...t.slice(-2), { id, msg }]);
-    window.setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2800);
+    setToasts((ts) => [...ts.slice(-2), { id, msg }]);
+    window.setTimeout(() => setToasts((ts) => ts.filter((x) => x.id !== id)), 2800);
   }, []);
 
   const lines = useMemo<CartLine[]>(
@@ -56,7 +69,7 @@ export default function App() {
   const cartCount = lines.reduce((s, l) => s + l.item.qty, 0);
 
   const addToCart = useCallback(
-    (product: Product, weight: Weight = 250, grind: Grind = "Whole bean", qty = 1) => {
+    (product: Product, weight: Weight = 250, grind: Grind = "whole", qty = 1) => {
       const key = `${product.id}|${weight}|${grind}`;
       setCart((c) => {
         const existing = c.find((i) => i.key === key);
@@ -65,9 +78,9 @@ export default function App() {
         }
         return [...c, { key, id: product.id, weight, grind, qty }];
       });
-      toast(`${product.name} · added to your crate`);
+      toast(t("toastAdded", { name: bi(product.name) }));
     },
-    [setCart, toast],
+    [setCart, toast, t, bi],
   );
 
   const setQty = useCallback(
@@ -82,9 +95,9 @@ export default function App() {
     [setCart],
   );
 
-  /* ---------- filtering ---------- */
+  /* ---------- filtering (searches both languages) ---------- */
   const counts = useMemo(() => {
-    const c: Record<string, number> = { All: PRODUCTS.length };
+    const c: Record<string, number> = { all: PRODUCTS.length };
     PRODUCTS.forEach((p) => {
       c[p.category] = (c[p.category] ?? 0) + 1;
     });
@@ -92,14 +105,11 @@ export default function App() {
   }, []);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = normalize(query.trim());
     const list = PRODUCTS.filter((p) => {
-      if (category !== "All" && p.category !== category) return false;
+      if (category !== "all" && p.category !== category) return false;
       if (!q) return true;
-      const hay = [p.name, p.origin, p.category, p.process, p.roastName, p.producer, ...p.notes]
-        .join(" ")
-        .toLowerCase();
-      return hay.includes(q);
+      return normalize(searchHay(p)).includes(q);
     });
     switch (sort) {
       case "price-asc":
@@ -107,13 +117,13 @@ export default function App() {
       case "price-desc":
         return [...list].sort((a, b) => b.price - a.price);
       case "roast":
-        return [...list].sort((a, b) => a.roast - b.roast || a.name.localeCompare(b.name));
+        return [...list].sort((a, b) => a.roast - b.roast || a.name.en.localeCompare(b.name.en));
       default:
         return list;
     }
   }, [query, category, sort]);
 
-  const isFiltered = query.trim() !== "" || category !== "All" || sort !== "featured";
+  const isFiltered = query.trim() !== "" || category !== "all" || sort !== "featured";
 
   /* ---------- keyboard ---------- */
   useEffect(() => {
@@ -137,7 +147,7 @@ export default function App() {
 
   const resetFilters = () => {
     setQuery("");
-    setCategory("All");
+    setCategory("all");
     setSort("featured");
   };
 
@@ -205,5 +215,13 @@ export default function App() {
 
       <Toasts toasts={toasts} />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <I18nProvider>
+      <Store />
+    </I18nProvider>
   );
 }

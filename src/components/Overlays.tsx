@@ -4,7 +4,6 @@ import {
   GRINDS,
   FREE_SHIP_AT,
   FLAT_SHIP,
-  money,
   priceFor,
   type Product,
   type Weight,
@@ -12,6 +11,7 @@ import {
   type CartItem,
 } from "../data/products";
 import { useBodyLock } from "../lib/hooks";
+import { useI18n, type TKey } from "../i18n";
 import { Steam } from "./Shop";
 import {
   CloseIcon,
@@ -42,6 +42,22 @@ export function totalsOf(lines: CartLine[]) {
   return { subtotal, ship, total: subtotal + ship };
 }
 
+const GRIND_LABEL: Record<Grind, TKey> = {
+  whole: "gWhole",
+  filter: "gFilter",
+  espresso: "gEspresso",
+};
+
+function useGrindLabel() {
+  const { t } = useI18n();
+  return (g: Grind) => t(GRIND_LABEL[g] ?? "gWhole");
+}
+
+function useWeightLabel() {
+  const { t } = useI18n();
+  return (w: Weight) => (w === 250 ? t("w250") : t("w1000"));
+}
+
 function QtyStepper({
   qty,
   onChange,
@@ -51,18 +67,19 @@ function QtyStepper({
   onChange: (q: number) => void;
   small?: boolean;
 }) {
+  const { t, num } = useI18n();
   const btn = `grid place-items-center rounded-md border border-cream-100/14 text-cream-300 transition-all hover:border-ember-500/60 hover:text-ember-400 active:scale-90 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
     small ? "w-7 h-7" : "w-9 h-9"
   }`;
   return (
     <div className="inline-flex items-center gap-1.5">
-      <button className={btn} onClick={() => onChange(qty - 1)} aria-label="Decrease quantity">
+      <button className={btn} onClick={() => onChange(qty - 1)} aria-label={t("decAria")}>
         <MinusIcon size={13} />
       </button>
       <span key={qty} className={`ticket-swap text-center font-mono text-sm font-semibold text-cream-100 ${small ? "w-7" : "w-9"}`}>
-        {qty}
+        {num(qty)}
       </span>
-      <button className={btn} onClick={() => onChange(qty + 1)} aria-label="Increase quantity">
+      <button className={btn} onClick={() => onChange(qty + 1)} aria-label={t("incAria")}>
         <PlusIcon size={13} />
       </button>
     </div>
@@ -79,46 +96,56 @@ export function ProductDetail({
   onClose: () => void;
   onAdd: (p: Product, w: Weight, g: Grind, qty: number) => void;
 }) {
+  const { t, bi, money, lang } = useI18n();
+  const grindLabel = useGrindLabel();
+  const weightLabel = useWeightLabel();
   const [weight, setWeight] = useState<Weight>(250);
-  const [grind, setGrind] = useState<Grind>("Whole bean");
+  const [grind, setGrind] = useState<Grind>("whole");
   const [qty, setQty] = useState(1);
 
   useEffect(() => {
     setWeight(250);
-    setGrind("Whole bean");
+    setGrind("whole");
     setQty(1);
   }, [product.id]);
 
   useBodyLock(true);
   const unit = priceFor(product.price, weight);
 
+  const CAT_KEY: Record<string, TKey> = {
+    single: "catSingle",
+    blend: "catBlend",
+    espresso: "catEspresso",
+    decaf: "catDecaf",
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6" role="dialog" aria-modal="true" aria-label={product.name}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6" role="dialog" aria-modal="true" aria-label={bi(product.name)}>
       <div className="absolute inset-0 bg-roast-950/80 backdrop-blur-sm fade-in" onClick={onClose} />
       <div className="modal-in relative w-full sm:max-w-4xl max-h-[92vh] overflow-y-auto rounded-t-[18px] sm:rounded-[16px] border border-cream-100/12 bg-roast-900 shadow-[0_40px_90px_-30px_rgba(0,0,0,0.9)]">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 grid place-items-center w-9 h-9 rounded-full border border-cream-100/14 bg-roast-950/60 text-cream-300 transition-all hover:border-ember-500/60 hover:text-ember-400 hover:rotate-90 duration-300 cursor-pointer"
-          aria-label="Close details"
+          className="absolute top-4 end-4 z-10 grid place-items-center w-9 h-9 rounded-full border border-cream-100/14 bg-roast-950/60 text-cream-300 transition-all hover:border-ember-500/60 hover:text-ember-400 hover:rotate-90 duration-300 cursor-pointer"
+          aria-label={t("closeDetails")}
         >
           <CloseIcon size={16} />
         </button>
 
         <div className="grid sm:grid-cols-[0.9fr_1.1fr]">
           <div className="relative h-64 sm:h-auto sm:min-h-[520px] overflow-hidden">
-            <img src={product.img} alt={product.name} className="absolute inset-0 h-full w-full object-cover" />
+            <img src={product.img} alt={bi(product.name)} className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-roast-900 via-transparent to-transparent sm:bg-gradient-to-r sm:from-transparent sm:via-transparent sm:to-roast-900" />
-            <div className="absolute bottom-4 left-4 flex items-center gap-2">
+            <div className="absolute bottom-4 start-4 flex items-center gap-2">
               {product.badge && (
                 <span className={`rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] ${
                   product.badge.tone === "leaf" ? "bg-leaf-500 text-roast-950" : product.badge.tone === "cherry" ? "bg-cherry-500 text-cream-100" : "bg-ember-500 text-roast-950"
                 }`}>
-                  {product.badge.label}
+                  {bi(product.badge.label)}
                 </span>
               )}
               {product.stock === "low" && (
                 <span className="rounded-full bg-roast-950/75 border border-cherry-500/40 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-cherry-400">
-                  Low stock
+                  {t("lowStock")}
                 </span>
               )}
             </div>
@@ -126,47 +153,47 @@ export function ProductDetail({
 
           <div className="p-6 sm:p-8">
             <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-ember-500">
-              {product.category} · Lot №{product.id.slice(0, 6).toUpperCase()}
+              {t("lotLine", { cat: t(CAT_KEY[product.category]), lot: product.id.slice(0, 6).toUpperCase() })}
             </p>
             <h2 className="mt-2 font-display text-3xl sm:text-4xl font-semibold text-cream-100 tracking-tight leading-[1.05]">
-              {product.name}
+              {bi(product.name)}
             </h2>
 
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-cream-500">
               <span className="inline-flex items-center gap-1.5">
                 <StarIcon size={13} className="text-ember-400" />
                 <strong className="text-cream-200 font-semibold">{product.rating.toFixed(1)}</strong>
-                ({product.reviews} cups logged)
+                ({lang === "fa" ? `${product.reviews.toLocaleString("fa-IR")} ${t("cupsLogged")}` : `${product.reviews} ${t("cupsLogged")}`}
               </span>
               <span className="inline-flex items-center gap-2 text-ember-400">
                 <RoastMeter level={product.roast} />
-                <span className="text-cream-500 text-[13px]">{product.roastName}</span>
+                <span className="text-cream-500 text-[13px]">{bi(product.roastName)}</span>
               </span>
             </div>
 
-            <p className="mt-4 text-[15px] leading-relaxed text-cream-400">{product.desc}</p>
+            <p className="mt-4 text-[15px] leading-relaxed text-cream-400">{bi(product.desc)}</p>
 
             <div className="mt-5 grid grid-cols-2 gap-x-5 gap-y-2.5 rounded-[11px] border border-cream-100/10 bg-roast-875/70 p-4 text-[13px]">
-              {[
-                ["Origin", product.origin],
-                ["Producer", product.producer],
-                ["Process", product.process],
-                ["Altitude", product.altitude],
-                ["Varietal", product.varietal],
-                ["Dial-in", product.brew],
-              ].map(([k, v]) => (
+              {([
+                ["specOrigin", product.origin],
+                ["specProducer", product.producer],
+                ["specProcess", product.process],
+                ["specAltitude", product.altitude],
+                ["specVarietal", product.varietal],
+                ["specDialIn", product.brew],
+              ] as [TKey, { en: string; fa: string }][]).map(([k, v]) => (
                 <div key={k}>
-                  <p className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-cream-600">{k}</p>
-                  <p className="mt-0.5 text-cream-300">{v}</p>
+                  <p className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-cream-600">{t(k)}</p>
+                  <p className="mt-0.5 text-cream-300">{bi(v)}</p>
                 </div>
               ))}
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 mr-1">Tastes like</span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 me-1">{t("tastesLike")}</span>
               {product.notes.map((n) => (
-                <span key={n} className="rounded-full border border-ember-500/30 bg-ember-500/8 px-3 py-1 text-[12.5px] text-ember-300">
-                  {n}
+                <span key={n.en} className="rounded-full border border-ember-500/30 bg-ember-500/8 px-3 py-1 text-[12.5px] text-ember-300">
+                  {bi(n)}
                 </span>
               ))}
             </div>
@@ -174,7 +201,7 @@ export function ProductDetail({
             {/* weight + grind */}
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 mb-2">Bag size</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 mb-2">{t("bagSize")}</p>
                 <div className="grid grid-cols-2 gap-2">
                   {WEIGHTS.map((w) => (
                     <button
@@ -187,14 +214,14 @@ export function ProductDetail({
                       }`}
                       aria-pressed={weight === w}
                     >
-                      {w === 250 ? "250 g" : "1 kg"}
+                      {weightLabel(w)}
                       <span className="block font-mono text-[10.5px] font-normal text-cream-600 mt-0.5">{money(priceFor(product.price, w))}</span>
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 mb-2">Grind</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 mb-2">{t("grindL")}</p>
                 <div className="grid grid-cols-3 gap-2">
                   {GRINDS.map((g) => (
                     <button
@@ -207,7 +234,7 @@ export function ProductDetail({
                       }`}
                       aria-pressed={grind === g}
                     >
-                      {g}
+                      {grindLabel(g)}
                     </button>
                   ))}
                 </div>
@@ -222,14 +249,14 @@ export function ProductDetail({
                 className="group flex-1 min-w-[220px] inline-flex items-center justify-center gap-2.5 rounded-full bg-ember-500 px-6 py-3.5 text-sm font-bold text-roast-950 transition-all duration-300 hover:bg-ember-400 hover:-translate-y-0.5 hover:shadow-[0_12px_34px_-12px_rgba(225,154,56,0.6)] active:translate-y-0 cursor-pointer"
               >
                 <CartIcon size={17} />
-                Add to cart — {money(unit * qty)}
-                <ArrowRightIcon size={15} className="transition-transform group-hover:translate-x-1" />
+                {t("addToCart", { m: money(unit * qty) })}
+                <ArrowRightIcon size={15} className="transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 rtl:-scale-x-100" />
               </button>
             </div>
 
             <p className="mt-4 flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.14em] text-cream-600">
               <LeafIcon size={13} className="text-leaf-400" />
-              Compostable bag · roasted this Tuesday · ships in 48h
+              {t("detailFoot")}
             </p>
           </div>
         </div>
@@ -254,29 +281,33 @@ export function CartDrawer({
   onRemove: (key: string) => void;
   onCheckout: () => void;
 }) {
+  const { t, bi, money, num } = useI18n();
+  const grindLabel = useGrindLabel();
+  const weightLabel = useWeightLabel();
   useBodyLock(open);
   if (!open) return null;
 
   const { subtotal, ship, total } = totalsOf(lines);
   const remaining = Math.max(0, FREE_SHIP_AT - subtotal);
   const progress = Math.min(100, (subtotal / FREE_SHIP_AT) * 100);
+  const count = lines.reduce((s, l) => s + l.item.qty, 0);
 
   return (
-    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Shopping cart">
+    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={t("cartAria")}>
       <div className="absolute inset-0 bg-roast-950/70 backdrop-blur-sm fade-in" onClick={onClose} />
-      <aside className="drawer-in absolute right-0 top-0 h-full w-full max-w-md flex flex-col border-l border-cream-100/12 bg-roast-900 shadow-[-30px_0_80px_-30px_rgba(0,0,0,0.8)]">
+      <aside className="drawer-in absolute end-0 top-0 h-full w-full max-w-md flex flex-col border-s border-cream-100/12 bg-roast-900 shadow-[-30px_0_80px_-30px_rgba(0,0,0,0.8)]">
         <header className="flex items-center justify-between px-5 py-4 border-b border-cream-100/10">
           <h2 className="flex items-center gap-2.5 font-display text-xl font-semibold text-cream-100">
             <CartIcon size={19} className="text-ember-400" />
-            Your crate
+            {t("yourCrate")}
             <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-cream-600">
-              {lines.reduce((s, l) => s + l.item.qty, 0)} items
+              {t("nItems", { n: count })}
             </span>
           </h2>
           <button
             onClick={onClose}
             className="grid place-items-center w-9 h-9 rounded-full border border-cream-100/14 text-cream-300 transition-all hover:border-ember-500/60 hover:text-ember-400 hover:rotate-90 duration-300 cursor-pointer"
-            aria-label="Close cart"
+            aria-label={t("closeCart")}
           >
             <CloseIcon size={15} />
           </button>
@@ -288,14 +319,16 @@ export function CartDrawer({
             <span className="inline-flex items-center gap-2 text-cream-400">
               <TruckIcon size={15} className={remaining === 0 ? "text-leaf-400" : "text-ember-400"} />
               {remaining === 0 ? (
-                <span className="text-leaf-300 font-semibold">Free shipping unlocked</span>
+                <span className="text-leaf-300 font-semibold">{t("shipUnlocked")}</span>
               ) : (
-                <>
-                  <strong className="text-cream-200">{money(remaining)}</strong> away from free shipping
-                </>
+                <span>
+                  {t("shipAwayPre")}
+                  <strong className="text-cream-200">{money(remaining)}</strong>
+                  {t("shipAwaySuf")}
+                </span>
               )}
             </span>
-            <span className="font-mono text-[10px] text-cream-600">${FREE_SHIP_AT} goal</span>
+            <span className="font-mono text-[10px] text-cream-600">{t("shipGoal", { m: money(FREE_SHIP_AT) })}</span>
           </div>
           <div className="mt-2 h-1.5 rounded-full bg-roast-950/80 overflow-hidden">
             <div
@@ -313,15 +346,13 @@ export function CartDrawer({
                   <BeanIcon size={30} className="text-cream-600" />
                   <Steam className="absolute -top-5 h-8 w-8 text-cream-600/70" />
                 </div>
-                <h3 className="mt-5 font-display text-xl font-semibold text-cream-200">Nothing brewing yet</h3>
-                <p className="mt-2 text-sm text-cream-500 max-w-[240px] mx-auto">
-                  Your crate is empty. The shelf, however, is full.
-                </p>
+                <h3 className="mt-5 font-display text-xl font-semibold text-cream-200">{t("cartEmptyTitle")}</h3>
+                <p className="mt-2 text-sm text-cream-500 max-w-[240px] mx-auto">{t("cartEmptyBody")}</p>
                 <button
                   onClick={onClose}
                   className="mt-5 inline-flex items-center gap-2 rounded-full bg-ember-500 px-5 py-2.5 text-sm font-bold text-roast-950 transition-all hover:bg-ember-400 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                 >
-                  Back to the shelf <ArrowRightIcon size={15} />
+                  {t("backToShelf")} <ArrowRightIcon size={15} className="rtl:-scale-x-100" />
                 </button>
               </div>
             </div>
@@ -329,29 +360,29 @@ export function CartDrawer({
             <ul className="space-y-4">
               {lines.map(({ item, product, unit }) => (
                 <li key={item.key} className="ticket-swap flex gap-3.5 rounded-[11px] border border-cream-100/8 bg-roast-875/60 p-3">
-                  <img src={product.img} alt={product.name} className="w-[74px] h-[88px] object-cover rounded-[8px] border border-cream-100/8" />
+                  <img src={product.img} alt={bi(product.name)} className="w-[74px] h-[88px] object-cover rounded-[8px] border border-cream-100/8" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <h4 className="font-display text-[15.5px] font-semibold text-cream-100 leading-snug truncate">{product.name}</h4>
+                        <h4 className="font-display text-[15.5px] font-semibold text-cream-100 leading-snug truncate">{bi(product.name)}</h4>
                         <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-cream-600">
-                          {item.weight === 250 ? "250 g" : "1 kg"} · {item.grind}
+                          {weightLabel(item.weight)} · {grindLabel(item.grind)}
                         </p>
                       </div>
                       <button
                         onClick={() => onRemove(item.key)}
                         className="shrink-0 grid place-items-center w-7 h-7 rounded-md text-cream-600 transition-all hover:text-cherry-400 hover:bg-cherry-500/10 cursor-pointer"
-                        aria-label={`Remove ${product.name}`}
+                        aria-label={t("removeAria", { name: bi(product.name) })}
                       >
                         <TrashIcon size={14} />
                       </button>
                     </div>
                     <div className="mt-2.5 flex items-center justify-between">
                       <QtyStepper small qty={item.qty} onChange={(q) => onQty(item.key, q)} />
-                      <div className="text-right">
+                      <div className="text-end">
                         <p className="font-display text-[15px] font-semibold text-ember-400">{money(unit * item.qty)}</p>
                         {item.qty > 1 && (
-                          <p className="font-mono text-[9.5px] text-cream-700">{money(unit)} each</p>
+                          <p className="font-mono text-[9.5px] text-cream-700">{money(unit)} {t("each")}</p>
                         )}
                       </div>
                     </div>
@@ -366,15 +397,15 @@ export function CartDrawer({
           <footer className="border-t border-cream-100/10 px-5 py-4 bg-roast-875/70">
             <dl className="space-y-1.5 text-sm">
               <div className="flex justify-between text-cream-400">
-                <dt>Subtotal</dt>
+                <dt>{t("subtotal")}</dt>
                 <dd className="font-mono">{money(subtotal)}</dd>
               </div>
               <div className="flex justify-between text-cream-400">
-                <dt>Shipping</dt>
-                <dd className={`font-mono ${ship === 0 ? "text-leaf-300" : ""}`}>{ship === 0 ? "Free" : money(ship)}</dd>
+                <dt>{t("shipping")}</dt>
+                <dd className={`font-mono ${ship === 0 ? "text-leaf-300" : ""}`}>{ship === 0 ? t("free") : money(ship)}</dd>
               </div>
               <div className="flex justify-between items-baseline pt-2 border-t border-cream-100/10">
-                <dt className="font-semibold text-cream-100">Total</dt>
+                <dt className="font-semibold text-cream-100">{t("total")}</dt>
                 <dd className="font-display text-2xl font-semibold text-cream-100">{money(total)}</dd>
               </div>
             </dl>
@@ -383,10 +414,10 @@ export function CartDrawer({
               className="mt-4 w-full inline-flex items-center justify-center gap-2.5 rounded-full bg-ember-500 px-6 py-3.5 text-sm font-bold text-roast-950 transition-all duration-300 hover:bg-ember-400 hover:-translate-y-0.5 hover:shadow-[0_12px_34px_-12px_rgba(225,154,56,0.6)] active:translate-y-0 cursor-pointer"
             >
               <LockIcon size={16} />
-              Simulated checkout — {money(total)}
+              {t("checkoutCta", { m: money(total) })}
             </button>
             <p className="mt-2.5 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-cream-700">
-              Demo · no card is ever charged
+              {t("demoNote")}
             </p>
           </footer>
         )}
@@ -397,13 +428,6 @@ export function CartDrawer({
 
 /* =============== checkout =============== */
 type Step = "form" | "processing" | "done";
-
-const PROCESSING_MSGS = [
-  "Warming up the grinder…",
-  "Contacting the bank…",
-  "Reserving your roast slot…",
-  "Stamping the bag…",
-];
 
 interface FormState {
   name: string;
@@ -438,6 +462,9 @@ export function CheckoutModal({
   onClose: () => void;
   onComplete: () => void;
 }) {
+  const { t, bi, money, num, lang } = useI18n();
+  const grindLabel = useGrindLabel();
+  const weightLabel = useWeightLabel();
   const [step, setStep] = useState<Step>("form");
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
@@ -446,7 +473,7 @@ export function CheckoutModal({
   const [snap, setSnap] = useState<{ total: number; count: number }>({ total: 0, count: 0 });
   const timers = useRef<number[]>([]);
 
-  const { subtotal, ship, total } = totalsOf(lines);
+  const { ship, total } = totalsOf(lines);
   const count = lines.reduce((s, l) => s + l.item.qty, 0);
 
   useEffect(() => {
@@ -456,7 +483,7 @@ export function CheckoutModal({
       setMsgIdx(0);
     }
     return () => {
-      timers.current.forEach((t) => window.clearTimeout(t));
+      timers.current.forEach((tm) => window.clearTimeout(tm));
       timers.current = [];
     };
   }, [open]);
@@ -473,6 +500,8 @@ export function CheckoutModal({
   useBodyLock(open);
   if (!open) return null;
 
+  const processingMsgs = [t("pm1"), t("pm2"), t("pm3"), t("pm4")];
+
   const set = (k: keyof FormState, v: string) => {
     setForm((f) => ({ ...f, [k]: v }));
     setErrors((e) => ({ ...e, [k]: undefined }));
@@ -487,14 +516,14 @@ export function CheckoutModal({
 
   const validate = (): boolean => {
     const e: Partial<Record<keyof FormState, string>> = {};
-    if (!form.name.trim()) e.name = "Required";
-    if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Valid email needed";
-    if (!form.address.trim()) e.address = "Required";
-    if (!form.city.trim()) e.city = "Required";
-    if (!form.zip.trim()) e.zip = "Required";
-    if (form.card.replace(/\s/g, "").length !== 16) e.card = "16 digits";
-    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(form.expiry)) e.expiry = "MM/YY";
-    if (!/^\d{3,4}$/.test(form.cvc)) e.cvc = "3–4 digits";
+    if (!form.name.trim()) e.name = t("errRequired");
+    if (!/\S+@\S+\.\S+/.test(form.email)) e.email = t("errEmail");
+    if (!form.address.trim()) e.address = t("errRequired");
+    if (!form.city.trim()) e.city = t("errRequired");
+    if (!form.zip.trim()) e.zip = t("errRequired");
+    if (form.card.replace(/\s/g, "").length !== 16) e.card = t("err16");
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(form.expiry)) e.expiry = t("errExp");
+    if (!/^\d{3,4}$/.test(form.cvc)) e.cvc = t("errCvc");
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -505,14 +534,14 @@ export function CheckoutModal({
     setSnap({ total, count });
     setStep("processing");
     setOrderId(`EO-${Math.random().toString(36).slice(2, 7).toUpperCase()}`);
-    PROCESSING_MSGS.forEach((_, i) => {
+    processingMsgs.forEach((_, i) => {
       timers.current.push(window.setTimeout(() => setMsgIdx(i), i * 620));
     });
     timers.current.push(
       window.setTimeout(() => {
         setStep("done");
         onComplete();
-      }, PROCESSING_MSGS.length * 620 + 500),
+      }, processingMsgs.length * 620 + 500),
     );
   };
 
@@ -520,21 +549,27 @@ export function CheckoutModal({
   const err = (k: keyof FormState) =>
     errors[k] ? <p className="mt-1 font-mono text-[10px] text-cherry-400">{errors[k]}</p> : null;
 
+  const label = (htmlFor: string, key: TKey) => (
+    <label className="block font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 mb-1.5" htmlFor={htmlFor}>
+      {t(key)}
+    </label>
+  );
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6" role="dialog" aria-modal="true" aria-label="Checkout">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6" role="dialog" aria-modal="true" aria-label={t("coAria")}>
       <div className="absolute inset-0 bg-roast-950/85 backdrop-blur-sm fade-in" onClick={step === "processing" ? undefined : onClose} />
       <div className="modal-in relative w-full sm:max-w-xl max-h-[94vh] overflow-y-auto rounded-t-[18px] sm:rounded-[16px] border border-cream-100/12 bg-roast-900 shadow-[0_40px_90px_-30px_rgba(0,0,0,0.9)]">
         {step === "form" && (
           <>
             <header className="flex items-center justify-between px-6 pt-6">
               <div>
-                <p className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-ember-500">Simulated checkout</p>
-                <h2 className="mt-1 font-display text-2xl sm:text-[1.7rem] font-semibold text-cream-100">Settle the tab</h2>
+                <p className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-ember-500">{t("coEyebrow")}</p>
+                <h2 className="mt-1 font-display text-2xl sm:text-[1.7rem] font-semibold text-cream-100">{t("coTitle")}</h2>
               </div>
               <button
                 onClick={onClose}
                 className="grid place-items-center w-9 h-9 rounded-full border border-cream-100/14 text-cream-300 transition-all hover:border-ember-500/60 hover:text-ember-400 hover:rotate-90 duration-300 cursor-pointer"
-                aria-label="Close checkout"
+                aria-label={t("coClose")}
               >
                 <CloseIcon size={15} />
               </button>
@@ -546,9 +581,9 @@ export function CheckoutModal({
                   {lines.map(({ item, product, unit }) => (
                     <li key={item.key} className="flex justify-between gap-3 text-[13.5px]">
                       <span className="text-cream-400 truncate">
-                        <strong className="text-cream-200 font-semibold">{item.qty}×</strong> {product.name}
-                        <span className="text-cream-600 font-mono text-[11px] ml-1.5">
-                          {item.weight === 250 ? "250 g" : "1 kg"} · {item.grind}
+                        <strong className="text-cream-200 font-semibold">{num(item.qty)}×</strong> {bi(product.name)}
+                        <span className="text-cream-600 font-mono text-[11px] ms-1.5">
+                          {weightLabel(item.weight)} · {grindLabel(item.grind)}
                         </span>
                       </span>
                       <span className="font-mono text-cream-300 shrink-0">{money(unit * item.qty)}</span>
@@ -556,11 +591,13 @@ export function CheckoutModal({
                   ))}
                 </ul>
                 <div className="mt-3 pt-3 border-t border-cream-100/10 flex justify-between text-sm">
-                  <span className="text-cream-500">Shipping {ship === 0 && <span className="text-leaf-300">· free</span>}</span>
-                  <span className="font-mono text-cream-300">{ship === 0 ? "$0.00" : money(ship)}</span>
+                  <span className="text-cream-500">
+                    {t("shipping")} {ship === 0 && <span className="text-leaf-300">{t("coShipFree")}</span>}
+                  </span>
+                  <span className="font-mono text-cream-300">{ship === 0 ? money(0) : money(ship)}</span>
                 </div>
                 <div className="mt-1.5 flex justify-between items-baseline">
-                  <span className="font-semibold text-cream-100 text-sm">Total</span>
+                  <span className="font-semibold text-cream-100 text-sm">{t("total")}</span>
                   <span className="font-display text-xl font-semibold text-ember-400">{money(total)}</span>
                 </div>
               </div>
@@ -568,43 +605,43 @@ export function CheckoutModal({
 
             <form onSubmit={submit} className="px-6 py-5 grid grid-cols-2 gap-x-3 gap-y-3.5" noValidate>
               <div className="col-span-2">
-                <label className="block font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 mb-1.5" htmlFor="co-name">Full name</label>
-                <input id="co-name" className={field("name")} value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Frankie Bean" autoComplete="name" />
+                {label("co-name", "lbName")}
+                <input id="co-name" className={field("name")} value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("phName")} autoComplete="name" />
                 {err("name")}
               </div>
               <div className="col-span-2">
-                <label className="block font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 mb-1.5" htmlFor="co-email">Email</label>
+                {label("co-email", "lbEmail")}
                 <input id="co-email" type="email" className={field("email")} value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="frankie@brewmail.com" autoComplete="email" />
                 {err("email")}
               </div>
               <div className="col-span-2">
-                <label className="block font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 mb-1.5" htmlFor="co-address">Street address</label>
-                <input id="co-address" className={field("address")} value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="2140 SE Ankeny St" autoComplete="street-address" />
+                {label("co-address", "lbAddress")}
+                <input id="co-address" className={field("address")} value={form.address} onChange={(e) => set("address", e.target.value)} placeholder={t("phAddress")} autoComplete="street-address" />
                 {err("address")}
               </div>
               <div>
-                <label className="block font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 mb-1.5" htmlFor="co-city">City</label>
-                <input id="co-city" className={field("city")} value={form.city} onChange={(e) => set("city", e.target.value)} placeholder="Portland" />
+                {label("co-city", "lbCity")}
+                <input id="co-city" className={field("city")} value={form.city} onChange={(e) => set("city", e.target.value)} placeholder={t("phCity")} />
                 {err("city")}
               </div>
               <div>
-                <label className="block font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 mb-1.5" htmlFor="co-zip">ZIP</label>
-                <input id="co-zip" className={field("zip")} value={form.zip} onChange={(e) => set("zip", e.target.value.replace(/[^\d-]/g, "").slice(0, 10))} placeholder="97214" autoComplete="postal-code" />
+                {label("co-zip", "lbZip")}
+                <input id="co-zip" className={field("zip")} value={form.zip} onChange={(e) => set("zip", e.target.value.replace(/[^\d-]/g, "").slice(0, 10))} placeholder={t("phZip")} autoComplete="postal-code" />
                 {err("zip")}
               </div>
               <div className="col-span-2">
-                <label className="block font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 mb-1.5" htmlFor="co-card">Card number</label>
-                <input id="co-card" inputMode="numeric" className={field("card")} value={form.card} onChange={(e) => set("card", formatCard(e.target.value))} placeholder="4242 4242 4242 4242" />
+                {label("co-card", "lbCard")}
+                <input id="co-card" inputMode="numeric" dir="ltr" className={`${field("card")} text-start`} value={form.card} onChange={(e) => set("card", formatCard(e.target.value))} placeholder="4242 4242 4242 4242" />
                 {err("card")}
               </div>
               <div>
-                <label className="block font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 mb-1.5" htmlFor="co-exp">Expiry</label>
-                <input id="co-exp" inputMode="numeric" className={field("expiry")} value={form.expiry} onChange={(e) => set("expiry", formatExpiry(e.target.value))} placeholder="08/27" />
+                {label("co-exp", "lbExp")}
+                <input id="co-exp" inputMode="numeric" dir="ltr" className={field("expiry")} value={form.expiry} onChange={(e) => set("expiry", formatExpiry(e.target.value))} placeholder="08/27" />
                 {err("expiry")}
               </div>
               <div>
-                <label className="block font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600 mb-1.5" htmlFor="co-cvc">CVC</label>
-                <input id="co-cvc" inputMode="numeric" className={field("cvc")} value={form.cvc} onChange={(e) => set("cvc", e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="123" />
+                {label("co-cvc", "lbCvc")}
+                <input id="co-cvc" inputMode="numeric" dir="ltr" className={field("cvc")} value={form.cvc} onChange={(e) => set("cvc", e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="123" />
                 {err("cvc")}
               </div>
               <div className="col-span-2 pt-1">
@@ -613,10 +650,10 @@ export function CheckoutModal({
                   className="w-full inline-flex items-center justify-center gap-2.5 rounded-full bg-ember-500 px-6 py-3.5 text-sm font-bold text-roast-950 transition-all duration-300 hover:bg-ember-400 hover:-translate-y-0.5 hover:shadow-[0_12px_34px_-12px_rgba(225,154,56,0.6)] active:translate-y-0 cursor-pointer"
                 >
                   <LockIcon size={16} />
-                  Pay {money(total)} — it's pretend
+                  {t("payCta", { m: money(total) })}
                 </button>
                 <p className="mt-2.5 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-cream-700">
-                  Demo checkout · nothing is charged or stored
+                  {t("payNote")}
                 </p>
               </div>
             </form>
@@ -627,10 +664,10 @@ export function CheckoutModal({
           <div className="px-6 py-20 text-center">
             <div className="spinner mx-auto" />
             <p key={msgIdx} className="ticket-swap mt-6 font-display text-xl font-semibold text-cream-100">
-              {PROCESSING_MSGS[msgIdx]}
+              {processingMsgs[msgIdx]}
             </p>
             <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.18em] text-cream-600">
-              Order {orderId} · {count} item{count === 1 ? "" : "s"}
+              {t("coOrderLine", { id: orderId, n: count })}
             </p>
           </div>
         )}
@@ -642,17 +679,28 @@ export function CheckoutModal({
                 <path className="check-draw" d="m5 12.5 4.5 4.5L19 7" />
               </svg>
             </div>
-            <h2 className="mt-6 font-display text-3xl font-semibold text-cream-100">Order's on the drum.</h2>
+            <h2 className="mt-6 font-display text-3xl font-semibold text-cream-100">{t("doneTitle")}</h2>
             <p className="mt-3 text-[15px] text-cream-500 max-w-sm mx-auto leading-relaxed">
-              Order <strong className="text-ember-400 font-mono text-sm">{orderId}</strong> is confirmed —{" "}
-              {snap.count} item{snap.count === 1 ? "" : "s"} for <strong className="text-cream-200">{money(snap.total)}</strong>.
-              A pretend confirmation is headed to <strong className="text-cream-200">{form.email || "your inbox"}</strong>,
-              and your beans will be roasted Tuesday.
+              {lang === "en" ? (
+                <>
+                  Order <strong className="text-ember-400 font-mono text-sm">{orderId}</strong> is confirmed —{" "}
+                  {snap.count} item{snap.count === 1 ? "" : "s"} for <strong className="text-cream-200">{money(snap.total)}</strong>.
+                  A pretend confirmation is headed to <strong className="text-cream-200">{form.email || t("yourInbox")}</strong>,
+                  and your beans will be roasted Tuesday.
+                </>
+              ) : (
+                <>
+                  سفارش <strong className="text-ember-400 font-mono text-sm" dir="ltr">{orderId}</strong> ثبت شد —{" "}
+                  {num(snap.count)} قلم به مبلغ <strong className="text-cream-200">{money(snap.total)}</strong>.
+                  تأییدیهٔ نمایشی به <strong className="text-cream-200">{form.email || t("yourInbox")}</strong> می‌رود
+                  و دانه‌هایتان سه‌شنبه رست می‌شوند.
+                </>
+              )}
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
-              {["Roast day: Tuesday", "Ships within 48h", "Dial-in card included"].map((t) => (
-                <span key={t} className="inline-flex items-center gap-1.5 rounded-full border border-cream-100/12 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-cream-400">
-                  <CheckIcon size={11} className="text-leaf-400" /> {t}
+              {["chip1", "chip2", "chip3"].map((c) => (
+                <span key={c} className="inline-flex items-center gap-1.5 rounded-full border border-cream-100/12 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-cream-400">
+                  <CheckIcon size={11} className="text-leaf-400" /> {t(c as TKey)}
                 </span>
               ))}
             </div>
@@ -660,7 +708,7 @@ export function CheckoutModal({
               onClick={onClose}
               className="mt-8 inline-flex items-center gap-2.5 rounded-full bg-ember-500 px-7 py-3.5 text-sm font-bold text-roast-950 transition-all duration-300 hover:bg-ember-400 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
             >
-              Back to the shelf <ArrowRightIcon size={15} />
+              {t("backToShelf")} <ArrowRightIcon size={15} className="rtl:-scale-x-100" />
             </button>
           </div>
         )}
@@ -677,9 +725,9 @@ export interface Toast {
 
 export function Toasts({ toasts }: { toasts: Toast[] }) {
   return (
-    <div className="fixed bottom-5 left-4 sm:left-6 z-[80] flex flex-col gap-2 max-w-[calc(100vw-2rem)]" aria-live="polite">
+    <div className="fixed bottom-5 start-4 sm:start-6 z-[80] flex flex-col gap-2 max-w-[calc(100vw-2rem)]" aria-live="polite">
       {toasts.map((t) => (
-        <div key={t.id} className="toast-in flex items-center gap-3 rounded-[11px] border border-ember-500/30 bg-roast-850/95 backdrop-blur-md pl-3.5 pr-4 py-3 shadow-[0_16px_40px_-14px_rgba(0,0,0,0.8)]">
+        <div key={t.id} className="toast-in flex items-center gap-3 rounded-[11px] border border-ember-500/30 bg-roast-850/95 backdrop-blur-md ps-3.5 pe-4 py-3 shadow-[0_16px_40px_-14px_rgba(0,0,0,0.8)]">
           <span className="grid place-items-center w-7 h-7 shrink-0 rounded-full bg-ember-500 text-roast-950">
             <CheckIcon size={14} />
           </span>
