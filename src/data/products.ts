@@ -1,238 +1,112 @@
-import type { Bi, Lang } from "../i18n";
+/* ─────────────────────────────────────────────────────────────
+   محصولات مجموعه قهوه کاشان — ۲۰ محصول فروشگاهی + ۱۲ نوشیدنی کافه
+   قیمت‌ها به تومان و از طریق پنل مدیریت قابل ویرایش‌اند.
+   ───────────────────────────────────────────────────────────── */
 
-export type CategoryKey = "single" | "blend" | "espresso" | "decaf";
+export type ProductCategory = "beans" | "brew" | "syrup" | "equip" | "drink";
+
+export const CATEGORY_LABEL: Record<ProductCategory, string> = {
+  beans: "دانهٔ قهوه",
+  brew: "پودر و دم‌کردنی",
+  syrup: "سیروپ",
+  equip: "تجهیزات",
+  drink: "نوشیدنی کافه",
+};
+
+export const CATEGORIES: ("all" | ProductCategory)[] = [
+  "all", "beans", "brew", "syrup", "equip", "drink",
+];
 
 export interface Product {
   id: string;
-  name: Bi;
-  origin: Bi;
-  category: CategoryKey;
-  process: Bi;
-  altitude: Bi;
-  varietal: Bi;
-  producer: Bi;
-  roast: 1 | 2 | 3 | 4 | 5;
-  roastName: Bi;
-  notes: Bi[];
-  price: number; // per 250g
-  rating: number;
-  reviews: number;
-  badge?: { label: Bi; tone: "ember" | "cherry" | "leaf" };
+  name: string;
+  category: ProductCategory;
+  pack: string;
+  unit: string;
+  price: number;        // قیمت فروش (تومان)
+  purchasePrice: number; // قیمت خرید (تومان)
+  stock: number;
+  minStock: number;
+  supplierId: string;
   img: string;
-  desc: Bi;
-  brew: Bi;
-  stock: "in" | "low";
+  desc: string;
+  updatedAt: string; // ISO
 }
 
-export const PRODUCTS: Product[] = [
-  {
-    id: "ethiopia-guji",
-    name: { en: "Ethiopia Guji Highlands", fa: "اتیوپی، ارتفاعات گوجی" },
-    origin: { en: "Guji Zone, Ethiopia", fa: "منطقهٔ گوجی، اتیوپی" },
-    category: "single",
-    process: { en: "Washed", fa: "شسته" },
-    altitude: { en: "1,950–2,100 masl", fa: "۱٬۹۵۰ تا ۲٬۱۰۰ متر از سطح دریا" },
-    varietal: { en: "Heirloom 74110", fa: "ارلوم ۷۴۱۱۰" },
-    producer: { en: "Dimtu Tero smallholders", fa: "خرده‌مالکان دیمتو ترو" },
-    roast: 2,
-    roastName: { en: "Light", fa: "روشن" },
-    notes: [
-      { en: "Bergamot", fa: "ترنج" },
-      { en: "Jasmine", fa: "یاس" },
-      { en: "Apricot", fa: "زردآلو" },
-    ],
-    price: 19.5,
-    rating: 4.9,
-    reviews: 214,
-    badge: { label: { en: "Fresh crop", fa: "بار تازه" }, tone: "leaf" },
-    img: "https://image.qwenlm.ai/generated-images/0010b6ed-f356-4651-a527-0111dbcebc58/_result.png",
-    desc: {
-      en: "A luminous washed heirloom from the Guji highlands. Florals hit first — jasmine and bergamot — before a soft apricot sweetness carries the finish. We roast it gently to keep the cup tea-like and sparkling.",
-      fa: "یک ارلومِ شستهٔ درخشان از ارتفاعات گوجی. اول گل‌ها می‌رسند — یاس و ترنج — و بعد شیرینی ملایم زردآلو فینیش را جلو می‌برد. آرام رست می‌کنیم تا فنجان، چای‌مانند و شفاف بماند.",
-    },
-    brew: { en: "V60 · 1:16 · 94°C · 2:45", fa: "V60 · ۱:۱۶ · ۹۴°C · ۲:۴۵" },
-    stock: "in",
-  },
-  {
-    id: "colombia-huila",
-    name: { en: "Colombia Finca La Cima", fa: "کلمبیا، فینکا لاسیما" },
-    origin: { en: "Huila, Colombia", fa: "هویلا، کلمبیا" },
-    category: "single",
-    process: { en: "Honey", fa: "هانی" },
-    altitude: { en: "1,750 masl", fa: "۱٬۷۵۰ متر از سطح دریا" },
-    varietal: { en: "Pink Bourbon", fa: "پینک بوربون" },
-    producer: { en: "Familia Rojas", fa: "خانوادهٔ روخاس" },
-    roast: 3,
-    roastName: { en: "Medium", fa: "متوسط" },
-    notes: [
-      { en: "Panela", fa: "پانلا" },
-      { en: "Red apple", fa: "سیب قرمز" },
-      { en: "Cacao nib", fa: "کاکائو نیب" },
-    ],
-    price: 17.0,
-    rating: 4.8,
-    reviews: 187,
-    img: "https://image.qwenlm.ai/generated-images/e01d8f91-0ada-4ab2-9e53-b398933c844a/_result.png",
-    desc: {
-      en: "Pink Bourbon from the Rojas family, rested through a red-honey process that wraps every sip in raw-sugar sweetness. Balanced and comforting — red apple brightness over a panela and cacao base.",
-      fa: "پینک بوربونِ خانوادهٔ روخاس، با فرآوری رد-هانی که هر جرعه را در شیرینی شکر خام می‌پوشاند. متعادل و دلگرم‌کننده — روشنی سیب قرمز روی پایه‌ای از پانلا و کاکائو.",
-    },
-    brew: { en: "Batch brew · 1:15 · 93°C · 4:00", fa: "بچ‌برو · ۱:۱۵ · ۹۳°C · ۴:۰۰" },
-    stock: "in",
-  },
-  {
-    id: "sumatra-mandheling",
-    name: { en: "Sumatra Mandheling", fa: "سوماترا ماندلینگ" },
-    origin: { en: "North Sumatra, Indonesia", fa: "سوماترای شمالی، اندونزی" },
-    category: "single",
-    process: { en: "Wet-hulled", fa: "وت‌هالد" },
-    altitude: { en: "1,400–1,600 masl", fa: "۱٬۴۰۰ تا ۱٬۶۰۰ متر از سطح دریا" },
-    varietal: { en: "Ateng, Jember", fa: "آتنگ، جمبر" },
-    producer: { en: "Lintong co-operative", fa: "تعاونی لینتونگ" },
-    roast: 5,
-    roastName: { en: "Dark", fa: "تیره" },
-    notes: [
-      { en: "Cedar", fa: "سدر" },
-      { en: "Molasses", fa: "ملاس" },
-      { en: "Dark chocolate", fa: "شکلات تلخ" },
-    ],
-    price: 18.25,
-    rating: 4.6,
-    reviews: 158,
-    badge: { label: { en: "Cup of the week", fa: "فنجان هفته" }, tone: "cherry" },
-    img: "https://image.qwenlm.ai/generated-images/33413b83-ca41-4998-8f1c-247392c65f02/_result.png",
-    desc: {
-      en: "Deep, syrupy and unapologetically earthy. The wet-hulled process gives it that classic Mandheling weight — cedar and molasses with a long dark-chocolate finish. Built for milk, glorious black.",
-      fa: "عمیق، شربت‌مانند و بی‌پروا خاکی. فرآوری وت‌هالد همان وزن کلاسیک ماندلینگ را به آن می‌دهد — سدر و ملاس با فینیشی بلند از شکلات تلخ. برای شیر ساخته شده، ولی سیاه‌اش هم باشکوه است.",
-    },
-    brew: { en: "French press · 1:14 · 96°C · 4:00", fa: "فرنچ‌پرس · ۱:۱۴ · ۹۶°C · ۴:۰۰" },
-    stock: "in",
-  },
-  {
-    id: "ember-blend",
-    name: { en: "Ember Blend No. 4", fa: "ترکیب امبر شمارهٔ ۴" },
-    origin: { en: "Brazil + Guatemala", fa: "برزیل + گواتمالا" },
-    category: "blend",
-    process: { en: "Natural + Washed", fa: "طبیعی + شسته" },
-    altitude: { en: "1,200–1,800 masl", fa: "۱٬۲۰۰ تا ۱٬۸۰۰ متر از سطح دریا" },
-    varietal: { en: "Mundo Novo, Caturra", fa: "موندونووو، کاتورا" },
-    producer: { en: "Two-farm partnership", fa: "مشارکت دو مزرعه" },
-    roast: 4,
-    roastName: { en: "Medium-dark", fa: "متوسط رو به تیره" },
-    notes: [
-      { en: "Caramel", fa: "کارامل" },
-      { en: "Hazelnut", fa: "فندق" },
-      { en: "Brown sugar", fa: "شکر قهوه‌ای" },
-    ],
-    price: 15.5,
-    rating: 4.7,
-    reviews: 342,
-    img: "https://image.qwenlm.ai/generated-images/c5048cee-97a4-4b04-8921-f3315d599f08/_result.png",
-    desc: {
-      en: "Our flagship house blend, tuned for the morning ritual. A natural Brazilian base brings hazelnut and brown-sugar body; a washed Guatemalan lifts it with soft caramel. Forgiving on any brewer.",
-      fa: "ترکیب اصلی خانه، کوک‌شده برای آیین صبح. پایهٔ طبیعیِ برزیلی، بدنه‌ای از فندق و شکر قهوه‌ای می‌آورد؛ و گواتمالای شسته با کاراملی نرم بلندش می‌کند. با هر دمی کنار می‌آید.",
-    },
-    brew: { en: "Any brewer · 1:15 · 93°C", fa: "هر دمی · ۱:۱۵ · ۹۳°C" },
-    stock: "in",
-  },
-  {
-    id: "night-shift",
-    name: { en: "Night Shift Espresso", fa: "اسپرسوی شیفت شب" },
-    origin: { en: "Brazil + Ethiopia", fa: "برزیل + اتیوپی" },
-    category: "espresso",
-    process: { en: "Natural + Washed", fa: "طبیعی + شسته" },
-    altitude: { en: "1,150–1,900 masl", fa: "۱٬۱۵۰ تا ۱٬۹۰۰ متر از سطح دریا" },
-    varietal: { en: "Catuaí, Heirloom", fa: "کاتوآیی، ارلوم" },
-    producer: { en: "Roaster's cut", fa: "انتخاب رُستر" },
-    roast: 4,
-    roastName: { en: "Medium-dark", fa: "متوسط رو به تیره" },
-    notes: [
-      { en: "Bittersweet cacao", fa: "کاکائوی تلخ‌وشیرین" },
-      { en: "Toasted almond", fa: "بادام برشته" },
-      { en: "Orange zest", fa: "پوست پرتقال" },
-    ],
-    price: 16.75,
-    rating: 4.8,
-    reviews: 269,
-    badge: { label: { en: "Bar favourite", fa: "محبوبِ بار" }, tone: "ember" },
-    img: "https://image.qwenlm.ai/generated-images/3ad3c9cd-d606-42fb-970b-db956f14529a/_result.png",
-    desc: {
-      en: "Dialed for the machine. Pulls a syrupy shot of bittersweet cacao and toasted almond, with a flicker of orange zest from the Ethiopian component keeping it alive. Cuts through milk beautifully.",
-      fa: "برای دستگاه کوک شده. شاتی شربت‌مانند از کاکائوی تلخ‌وشیرین و بادام برشته می‌دهد، با جرقه‌ای از پوست پرتقال که از بخش اتیوپیایی می‌آید و زنده‌اش نگه می‌دارد. از شیر به‌خوبی عبور می‌کند.",
-    },
-    brew: { en: "Espresso · 1:2 · 93°C · 27s", fa: "اسپرسو · ۱:۲ · ۹۳°C · ۲۷ ثانیه" },
-    stock: "low",
-  },
-  {
-    id: "moonlight-decaf",
-    name: { en: "Moonlight Decaf", fa: "دیکافِ مهتاب" },
-    origin: { en: "Cauca, Colombia", fa: "کاوکا، کلمبیا" },
-    category: "decaf",
-    process: { en: "Sugarcane E.A.", fa: "اتیل‌استات نیشکر" },
-    altitude: { en: "1,700 masl", fa: "۱٬۷۰۰ متر از سطح دریا" },
-    varietal: { en: "Castillo, Colombia", fa: "کاستیلو، کلمبیا" },
-    producer: { en: "Smallholder group", fa: "گروه خرده‌مالکان" },
-    roast: 3,
-    roastName: { en: "Medium", fa: "متوسط" },
-    notes: [
-      { en: "Honey", fa: "عسل" },
-      { en: "Milk chocolate", fa: "شکلات شیری" },
-      { en: "Almond", fa: "بادام" },
-    ],
-    price: 17.25,
-    rating: 4.7,
-    reviews: 121,
-    img: "https://image.qwenlm.ai/generated-images/139f6130-5a70-479c-8c91-c76d6eccd980/_result.png",
-    desc: {
-      en: "A sugarcane-process decaf that tastes like coffee should — none of the flat, papery notes. Honeyed and round, with milk chocolate and almond. Late nights, early starts, no compromises.",
-      fa: "دیکافی با فرآوری نیشکر که طعم قهوهٔ واقعی می‌دهد — خبری از نت‌های تخت و کاغذی نیست. عسلی و گِرد، با شکلات شیری و بادام. برای شب‌های دیر و صبح‌های زود، بدون مصالحه.",
-    },
-    brew: { en: "V60 or pot · 1:15 · 92°C", fa: "V60 یا قهوه‌جوش · ۱:۱۵ · ۹۲°C" },
-    stock: "in",
-  },
-];
+const IMG = {
+  a: "https://image.qwenlm.ai/generated-images/0010b6ed-f356-4651-a527-0111dbcebc58/_result.png",
+  b: "https://image.qwenlm.ai/generated-images/e01d8f91-0ada-4ab2-9e53-b398933c844a/_result.png",
+  c: "https://image.qwenlm.ai/generated-images/33413b83-ca41-4998-8f1c-247392c65f02/_result.png",
+  d: "https://image.qwenlm.ai/generated-images/c5048cee-97a4-4b04-8921-f3315d599f08/_result.png",
+  e: "https://image.qwenlm.ai/generated-images/3ad3c9cd-d606-42fb-970b-db956f14529a/_result.png",
+  f: "https://image.qwenlm.ai/generated-images/139f6130-5a70-479c-8c91-c76d6eccd980/_result.png",
+};
 
-export const MASTHEAD_IMG =
+export const HERO_IMG =
   "https://image.qwenlm.ai/generated-images/ee8b6cef-59e7-4a40-b932-3e9ef3706ec7/_result.png";
 
-export const CATEGORY_KEYS: CategoryKey[] = ["single", "blend", "espresso", "decaf"];
+const d = (days: number) => {
+  const t = new Date();
+  t.setDate(t.getDate() - days);
+  return t.toISOString();
+};
 
-export type Weight = 250 | 1000;
-export type Grind = "whole" | "filter" | "espresso";
+export const PRODUCTS: Product[] = [
+  /* ── دانهٔ قهوه ── */
+  { id: "esp70", name: "قهوه اسپرسو ۷۰٪ روبوستا ۳۰٪ عربیکا", category: "beans", pack: "۲۵۰ گرمی", unit: "بسته", price: 890_000, purchasePrice: 615_000, stock: 46, minStock: 12, supplierId: "sup-teh", img: IMG.c, desc: "پرکافئین و پرکرما؛ انتخاب اول کافه‌ها و علاقه‌مندان به اسپرسوی قوی. رست مدیوم-دارک با تلخی متعادل و ماندگاری طعم بالا.", updatedAt: d(2) },
+  { id: "esp50", name: "قهوه اسپرسو ۵۰٪ عربیکا ۵۰٪ روبوستا", category: "beans", pack: "۲۵۰ گرمی", unit: "بسته", price: 980_000, purchasePrice: 690_000, stock: 38, minStock: 12, supplierId: "sup-isf", img: IMG.a, desc: "تعادل کلاسیک عطر عربیکا و غلظت روبوستا؛ مناسب اسپرسوساز خانگی و موکاپات. کرما طلایی و عطر شکلاتی.", updatedAt: d(2) },
+  { id: "arabica100", name: "قهوه ۱۰۰٪ عربیکا", category: "beans", pack: "۲۵۰ گرمی", unit: "بسته", price: 1_350_000, purchasePrice: 985_000, stock: 24, minStock: 10, supplierId: "sup-teh", img: IMG.b, desc: "عربیکای مرغوب با اسیدیتهٔ زنده و عطر گل و مرکبات؛ مناسب کمکس و V60. رست لایت برای حفظ ظرافت دانه.", updatedAt: d(4) },
+  { id: "robusta100", name: "قهوه ۱۰۰٪ روبوستا", category: "beans", pack: "۲۵۰ گرمی", unit: "بسته", price: 850_000, purchasePrice: 570_000, stock: 52, minStock: 12, supplierId: "sup-kashan", img: IMG.d, desc: "روبوستای درجه‌یک با کافئین بالا و بدنهٔ سنگین؛ پایهٔ عالی برای ترکیب‌های اسپرسو و قهوه‌های انرژی‌بخش.", updatedAt: d(6) },
+  { id: "turk", name: "قهوه ترک", category: "beans", pack: "۲۵۰ گرمی", unit: "بسته", price: 790_000, purchasePrice: 540_000, stock: 9, minStock: 10, supplierId: "sup-kashan", img: IMG.f, desc: "آسیاب فوق‌ریز مخصوص جذوه با عطر هل؛ آمادهٔ دم برای قهوهٔ ترک اصیل. قابل سفارش با هل بیشتر.", updatedAt: d(1) },
+  { id: "france", name: "قهوه فرانسه", category: "beans", pack: "۲۵۰ گرمی", unit: "بسته", price: 920_000, purchasePrice: 640_000, stock: 31, minStock: 10, supplierId: "sup-isf", img: IMG.a, desc: "ترکیب نرم و ملایم با رست مدیوم؛ مناسب فرنچ‌پرس و قهوهٔ روزانه. طعم فندقی و پایان شیرین.", updatedAt: d(5) },
+  { id: "colombia", name: "قهوه کلمبیا", category: "beans", pack: "۲۵۰ گرمی", unit: "بسته", price: 1_490_000, purchasePrice: 1_105_000, stock: 18, minStock: 8, supplierId: "sup-teh", img: IMG.b, desc: "تک‌خاستگاه از منطقهٔ هویلا؛ بدنهٔ متوسط، شیرینی کاراملی و اسیدیتهٔ سیبی. یکی از محبوب‌ترین دانه‌های مجموعه.", updatedAt: d(3) },
+  { id: "brazil", name: "قهوه برزیل", category: "beans", pack: "۲۵۰ گرمی", unit: "بسته", price: 1_290_000, purchasePrice: 950_000, stock: 27, minStock: 8, supplierId: "sup-pars", img: IMG.d, desc: "طبیعی و کم‌اسیدیته با نت‌های فندوق و شکلات شیری؛ پایهٔ بسیاری از ترکیب‌های اسپرسوی کافه‌ها.", updatedAt: d(8) },
+  { id: "ethiopia", name: "قهوه اتیوپی", category: "beans", pack: "۲۵۰ گرمی", unit: "بسته", price: 1_550_000, purchasePrice: 1_160_000, stock: 14, minStock: 8, supplierId: "sup-teh", img: IMG.b, desc: "یریگاچف شسته با عطر یاس و برگاموت و شیرینی زردآلو؛ برای دم‌های دمی و علاقهمندان به قهوه‌های روشن.", updatedAt: d(3) },
+  { id: "kenya", name: "قهوه کنیا", category: "beans", pack: "۲۵۰ گرمی", unit: "بسته", price: 1_650_000, purchasePrice: 1_240_000, stock: 7, minStock: 8, supplierId: "sup-sabz", img: IMG.a, desc: "اسیدیتهٔ انگورفرنگی سیاه و بدنهٔ آبدار؛ قهوه‌ای خاص برای ذائقه‌های جست‌وجوگر. بار محدود هر فصل.", updatedAt: d(10) },
 
-export const WEIGHTS: Weight[] = [250, 1000];
-export const GRINDS: Grind[] = ["whole", "filter", "espresso"];
+  /* ── پودر و دم‌کردنی ── */
+  { id: "nescafe", name: "نسکافه گلد", category: "brew", pack: "۲۰۰ گرمی", unit: "بسته", price: 1_350_000, purchasePrice: 1_030_000, stock: 20, minStock: 8, supplierId: "sup-iran", img: IMG.f, desc: "قهوهٔ فوری گلد با عطر و طعم نزدیک به قهوهٔ دم؛ انتخاب سریع و مطمئن برای محل کار و سفر.", updatedAt: d(7) },
+  { id: "hotchoc", name: "هات چاکلت", category: "brew", pack: "۵۰۰ گرمی", unit: "بسته", price: 750_000, purchasePrice: 520_000, stock: 33, minStock: 10, supplierId: "sup-iran", img: IMG.c, desc: "پودر هات‌چاکلت غلیظ با ۳۴٪ کاکائو؛ کافی‌شاپی، کم‌شکر و با بافت مخملی. مناسب ۲۵ فنجان.", updatedAt: d(4) },
+  { id: "cappowder", name: "پودر کاپوچینو", category: "brew", pack: "۵۰۰ گرمی", unit: "بسته", price: 850_000, purchasePrice: 600_000, stock: 26, minStock: 10, supplierId: "sup-iran", img: IMG.e, desc: "پودر کاپوچینو آماده با فوم پایدار؛ فقط شیر داغ لازم است. مناسب خانه و محیط کار.", updatedAt: d(9) },
+  { id: "masala", name: "چای ماسالا", category: "brew", pack: "۵۰۰ گرمی", unit: "بسته", price: 690_000, purchasePrice: 470_000, stock: 41, minStock: 10, supplierId: "sup-iran", img: IMG.c, desc: "ترکیب اصیل چای سیاه و ادویه‌های دارچین، هل و زنجبیل؛ با شیر سرو می‌شود و طرفداران زیادی در کاشان دارد.", updatedAt: d(6) },
+  { id: "mochapowder", name: "پودر موکا", category: "brew", pack: "۵۰۰ گرمی", unit: "بسته", price: 790_000, purchasePrice: 555_000, stock: 17, minStock: 10, supplierId: "sup-iran", img: IMG.e, desc: "ترکیب آمادهٔ قهوه و کاکائو برای موکای خانگی؛ تلخی متعادل و عطر شکلات تلخ.", updatedAt: d(12) },
 
-export function priceFor(base: number, weight: Weight): number {
-  return weight === 250 ? base : Math.round(base * 3.4 * 2) / 2;
-}
+  /* ── سیروپ‌ها ── */
+  { id: "syrup-caramel", name: "سیروپ کارامل", category: "syrup", pack: "۷۵۰ میلی‌لیتر", unit: "بطری", price: 590_000, purchasePrice: 410_000, stock: 22, minStock: 8, supplierId: "sup-iran", img: IMG.f, desc: "سیروپ کارامل غلیظ برای کارامل ماکیاتو، لاته و دسر؛ شیرینی یکنواخت و عطر کره‌ای.", updatedAt: d(15) },
+  { id: "syrup-vanilla", name: "سیروپ وانیل", category: "syrup", pack: "۷۵۰ میلی‌لیتر", unit: "بطری", price: 590_000, purchasePrice: 410_000, stock: 5, minStock: 8, supplierId: "sup-iran", img: IMG.b, desc: "وانیل طبیعی مادگاسکار؛ مکمل همیشگی لاته و کاپوچینو. پرمصرف‌ترین سیروپ مجموعه.", updatedAt: d(1) },
+  { id: "syrup-hazelnut", name: "سیروپ فندق", category: "syrup", pack: "۷۵۰ میلی‌لیتر", unit: "بطری", price: 620_000, purchasePrice: 435_000, stock: 13, minStock: 8, supplierId: "sup-iran", img: IMG.d, desc: "عطر فندق برشته برای لاته و موهیتوهای سرد؛ غلظت استاندارد کافی‌شاپی.", updatedAt: d(18) },
 
-export interface CartItem {
-  key: string;
-  id: string;
-  weight: Weight;
-  grind: Grind;
-  qty: number;
-}
+  /* ── تجهیزات ── */
+  { id: "filter", name: "فیلتر قهوه", category: "equip", pack: "بستهٔ ۱۰۰ عددی", unit: "بسته", price: 180_000, purchasePrice: 110_000, stock: 60, minStock: 15, supplierId: "sup-sepehr", img: IMG.a, desc: "فیلتر کاغذی مخروطی سایز ۲ بدون سفیدکنندهٔ شیمیایی؛ برای کمکس و V60.", updatedAt: d(20) },
+  { id: "tamper", name: "تمپر قهوه", category: "equip", pack: "سایز ۵۸ میلی‌متر", unit: "عدد", price: 850_000, purchasePrice: 590_000, stock: 11, minStock: 5, supplierId: "sup-sepehr", img: IMG.e, desc: "تمپر استیل با دستهٔ چوبی، کف تخت و وزن استاندارد؛ فشرده‌سازی یکنواخت برای عصاره‌گیری دقیق.", updatedAt: d(25) },
 
-export const FREE_SHIP_AT = 40;
-export const FLAT_SHIP = 5.5;
+  /* ── منوی نوشیدنی کافه ── */
+  { id: "d-single", name: "اسپرسو سینگل", category: "drink", pack: "یک شات", unit: "فنجان", price: 85_000, purchasePrice: 18_000, stock: 999, minStock: 0, supplierId: "sup-teh", img: HERO_IMG, desc: "یک شات اسپرسو با دانهٔ رست‌شدهٔ همان هفته؛ کرما طلایی و عصاره‌گیری دقیق.", updatedAt: d(0) },
+  { id: "d-double", name: "اسپرسو دبل", category: "drink", pack: "دو شات", unit: "فنجان", price: 110_000, purchasePrice: 36_000, stock: 999, minStock: 0, supplierId: "sup-teh", img: HERO_IMG, desc: "دبل شات برای روزهای شلوغ؛ همان دانهٔ تازه با عصاره‌گیری دوگانه.", updatedAt: d(0) },
+  { id: "d-americano", name: "آمریکانو", category: "drink", pack: "۲۴۰ میلی‌لیتر", unit: "فنجان", price: 110_000, purchasePrice: 25_000, stock: 999, minStock: 0, supplierId: "sup-teh", img: HERO_IMG, desc: "اسپرسو رقیق‌شده با آب داغ؛ سبک، شفاف و مناسب همراهی با کار.", updatedAt: d(0) },
+  { id: "d-cappuccino", name: "کاپوچینو", category: "drink", pack: "۱۸۰ میلی‌لیتر", unit: "فنجان", price: 130_000, purchasePrice: 38_000, stock: 999, minStock: 0, supplierId: "sup-teh", img: HERO_IMG, desc: "یک‌سوم اسپرسو، یک‌سوم شیر بخارپز، یک‌سوم فوم؛ کلاسیک ایتالیایی با دانهٔ اسپرسوی مجموعه.", updatedAt: d(0) },
+  { id: "d-latte", name: "لاته", category: "drink", pack: "۲۴۰ میلی‌لیتر", unit: "فنجان", price: 140_000, purchasePrice: 42_000, stock: 999, minStock: 0, supplierId: "sup-teh", img: HERO_IMG, desc: "شیر ابریشمی بیشتر، قهوهٔ ملایم‌تر؛ محبوب‌ترین نوشیدنی گرم مجموعه.", updatedAt: d(0) },
+  { id: "d-mocha", name: "موکا", category: "drink", pack: "۲۴۰ میلی‌لیتر", unit: "فنجان", price: 150_000, purchasePrice: 48_000, stock: 999, minStock: 0, supplierId: "sup-teh", img: HERO_IMG, desc: "اسپرسو، شیر و سس شکلات تلخ خانگی؛ با خامه در صورت تمایل.", updatedAt: d(0) },
+  { id: "d-caramel", name: "کارامل ماکیاتو", category: "drink", pack: "۲۴۰ میلی‌لیتر", unit: "فنجان", price: 160_000, purchasePrice: 52_000, stock: 999, minStock: 0, supplierId: "sup-teh", img: HERO_IMG, desc: "وانیل، شیر بخارپز، اسپرسو و سس کارامل روی آن؛ لایه‌لایه و خوش‌عطر.", updatedAt: d(0) },
+  { id: "d-hotchoc", name: "هات چاکلت", category: "drink", pack: "۲۴۰ میلی‌لیتر", unit: "فنجان", price: 140_000, purchasePrice: 45_000, stock: 999, minStock: 0, supplierId: "sup-teh", img: HERO_IMG, desc: "شکلات ۳۴٪ آب‌شده با شیر پرچرب؛ غلیظ و گرم، مناسب روزهای کویری سرد.", updatedAt: d(0) },
+  { id: "d-masala", name: "چای ماسالا", category: "drink", pack: "۲۴۰ میلی‌لیتر", unit: "فنجان", price: 145_000, purchasePrice: 40_000, stock: 999, minStock: 0, supplierId: "sup-teh", img: HERO_IMG, desc: "ماسالای خانگی با شیر تازه و ادویهٔ تازه‌کوب؛ تند و گرم.", updatedAt: d(0) },
+  { id: "d-iced-latte", name: "آیس لاته", category: "drink", pack: "۳۵۰ میلی‌لیتر", unit: "فنجان", price: 150_000, purchasePrice: 45_000, stock: 999, minStock: 0, supplierId: "sup-teh", img: HERO_IMG, desc: "دبل اسپرسو روی شیر سرد و یخ؛ تازه و پرانرژی.", updatedAt: d(0) },
+  { id: "d-iced-americano", name: "آیس آمریکانو", category: "drink", pack: "۳۵۰ میلی‌لیتر", unit: "فنجان", price: 125_000, purchasePrice: 30_000, stock: 999, minStock: 0, supplierId: "sup-teh", img: HERO_IMG, desc: "اسپرسو، آب خنک و یخ؛ سبک‌ترین انتخاب تابستان.", updatedAt: d(0) },
+  { id: "d-mojito", name: "موهیتو", category: "drink", pack: "۳۵۰ میلی‌لیتر", unit: "فنجان", price: 160_000, purchasePrice: 50_000, stock: 999, minStock: 0, supplierId: "sup-teh", img: HERO_IMG, desc: "نعناع تازه، لیموترش و سودا با سیروپ دلخواه؛ خنک و گوارا.", updatedAt: d(0) },
+];
 
-export function nextRoastDate(lang: Lang): string {
-  const d = new Date();
-  d.setDate(d.getDate() + ((2 - d.getDay() + 7) % 7 || 7)); // next Tuesday
-  return d.toLocaleDateString(lang === "fa" ? "fa-IR" : "en-US", {
-    month: "short",
-    day: "numeric",
-  });
-}
-
-/** All searchable text of a product, in both languages. */
+/* متن جست‌وجو — هم فارسی */
 export function searchHay(p: Product): string {
-  return [
-    p.name.en, p.name.fa, p.origin.en, p.origin.fa,
-    p.process.en, p.process.fa, p.roastName.en, p.roastName.fa,
-    p.producer.en, p.producer.fa, p.category,
-    ...p.notes.map((n) => `${n.en} ${n.fa}`),
-  ].join(" ");
+  const sup = SUP_NAME[p.supplierId] ?? "";
+  return [p.name, CATEGORY_LABEL[p.category], p.pack, p.unit, p.desc, sup].join(" ");
 }
+
+const SUP_NAME: Record<string, string> = {
+  "sup-teh": "بازرگانی قهوه تهران",
+  "sup-isf": "پخش قهوه اصفهان",
+  "sup-kashan": "قهوه مرکزی کاشان",
+  "sup-pars": "تأمین دانه پارس",
+  "sup-sabz": "بازرگانی دانه سبز",
+  "sup-sepehr": "پخش تجهیزات کافی‌شاپ سپهر",
+  "sup-iran": "تأمین‌کنندهٔ محصولات کافه ایران",
+};

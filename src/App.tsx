@@ -1,51 +1,52 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  PRODUCTS,
-  priceFor,
-  searchHay,
-  type Product,
-  type Weight,
-  type Grind,
-  type CartItem,
-} from "./data/products";
+import { searchHay, type Product } from "./data/products";
+import { toEnDigits, faDigits } from "./lib/format";
 import { useLocalStorage } from "./lib/hooks";
-import { I18nProvider, useI18n } from "./i18n";
-import { BackgroundFX, NoiseLayer, Ticker, Header, Footer } from "./components/Chrome";
-import { Masthead, FilterBar, Shelf, LedgerBand, type SortKey, type CategorySel } from "./components/Shop";
+import { AppStoreProvider, useStore } from "./lib/store";
+import { BackgroundFX, NoiseLayer, Ticker, Header, Footer, type ViewKey } from "./components/Chrome";
 import {
-  ProductDetail,
-  CartDrawer,
-  CheckoutModal,
-  Toasts,
-  type CartLine,
-  type Toast,
+  Masthead, FilterBar, Shelf, AboutBand,
+  type SortKey, type CategorySel,
+} from "./components/Shop";
+import {
+  ProductDetail, CartDrawer, CheckoutModal, Toasts,
+  type CartLine, type Toast,
 } from "./components/Overlays";
+import { AdminPanel, type TabKey } from "./components/admin/AdminPanel";
 
-/** Normalizes a search query across both languages
- *  (Arabic yeh/kaf → Persian, drops ZWNJ & LRM/RLM marks). */
+interface CartItem {
+  id: string;
+  qty: number;
+}
+
+/** نرمال‌سازی جست‌وجو: ارقام، ی/ک عربی، نیم‌فاصله */
 function normalize(s: string): string {
-  return s
+  return toEnDigits(s)
     .toLowerCase()
     .replace(/[يى]/g, "ی")
     .replace(/ك/g, "ک")
     .replace(/[\u200c\u200e\u200f]/g, "");
 }
 
-function Store() {
-  const { t, bi } = useI18n();
-
-  /* ---------- catalog state ---------- */
+function Storefront({
+  cart,
+  setCart,
+  drawerOpen,
+  setDrawerOpen,
+  onAdmin,
+}: {
+  cart: CartItem[];
+  setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  drawerOpen: boolean;
+  setDrawerOpen: (v: boolean) => void;
+  onAdmin: () => void;
+}) {
+  const { products } = useStore();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CategorySel>("all");
   const [sort, setSort] = useState<SortKey>("featured");
-
-  /* ---------- overlay state ---------- */
   const [detail, setDetail] = useState<Product | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-
-  /* ---------- cart ---------- */
-  const [cart, setCart] = useLocalStorage<CartItem[]>("eo-crate-v2", []);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const toast = useCallback((msg: string) => {
@@ -58,55 +59,50 @@ function Store() {
     () =>
       cart
         .map((item) => {
-          const product = PRODUCTS.find((p) => p.id === item.id);
-          if (!product) return null;
-          return { item, product, unit: priceFor(product.price, item.weight) };
+          const product = products.find((p) => p.id === item.id);
+          return product ? { product, qty: item.qty } : null;
         })
         .filter((x): x is CartLine => x !== null),
-    [cart],
+    [cart, products],
   );
 
-  const cartCount = lines.reduce((s, l) => s + l.item.qty, 0);
-
   const addToCart = useCallback(
-    (product: Product, weight: Weight = 250, grind: Grind = "whole", qty = 1) => {
-      const key = `${product.id}|${weight}|${grind}`;
+    (product: Product, qty = 1) => {
       setCart((c) => {
-        const existing = c.find((i) => i.key === key);
+        const existing = c.find((i) => i.id === product.id);
         if (existing) {
-          return c.map((i) => (i.key === key ? { ...i, qty: Math.min(12, i.qty + qty) } : i));
+          return c.map((i) => (i.id === product.id ? { ...i, qty: Math.min(12, i.qty + qty) } : i));
         }
-        return [...c, { key, id: product.id, weight, grind, qty }];
+        return [...c, { id: product.id, qty }];
       });
-      toast(t("toastAdded", { name: bi(product.name) }));
+      toast(`«${product.name}» به سبد اضافه شد (${faDigits(qty)} عدد)`);
     },
-    [setCart, toast, t, bi],
+    [setCart, toast],
   );
 
   const setQty = useCallback(
-    (key: string, qty: number) => {
-      setCart((c) => (qty < 1 ? c.filter((i) => i.key !== key) : c.map((i) => (i.key === key ? { ...i, qty: Math.min(12, qty) } : i))));
+    (id: string, qty: number) => {
+      setCart((c) =>
+        qty < 1 ? c.filter((i) => i.id !== id) : c.map((i) => (i.id === id ? { ...i, qty: Math.min(12, qty) } : i)),
+      );
     },
     [setCart],
   );
 
-  const removeLine = useCallback(
-    (key: string) => setCart((c) => c.filter((i) => i.key !== key)),
-    [setCart],
-  );
+  const removeLine = useCallback((id: string) => setCart((c) => c.filter((i) => i.id !== id)), [setCart]);
 
-  /* ---------- filtering (searches both languages) ---------- */
+  /* ---------- فیلتر و جست‌وجو ---------- */
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: PRODUCTS.length };
-    PRODUCTS.forEach((p) => {
+    const c: Record<string, number> = { all: products.length };
+    products.forEach((p) => {
       c[p.category] = (c[p.category] ?? 0) + 1;
     });
     return c;
-  }, []);
+  }, [products]);
 
   const filtered = useMemo(() => {
     const q = normalize(query.trim());
-    const list = PRODUCTS.filter((p) => {
+    const list = products.filter((p) => {
       if (category !== "all" && p.category !== category) return false;
       if (!q) return true;
       return normalize(searchHay(p)).includes(q);
@@ -116,34 +112,30 @@ function Store() {
         return [...list].sort((a, b) => a.price - b.price);
       case "price-desc":
         return [...list].sort((a, b) => b.price - a.price);
-      case "roast":
-        return [...list].sort((a, b) => a.roast - b.roast || a.name.en.localeCompare(b.name.en));
       default:
         return list;
     }
-  }, [query, category, sort]);
+  }, [products, query, category, sort]);
 
   const isFiltered = query.trim() !== "" || category !== "all" || sort !== "featured";
 
-  /* ---------- keyboard ---------- */
+  /* ---------- کیبورد ---------- */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (checkoutOpen) return; // checkout modal handles its own Esc
+      if (checkoutOpen) return;
       if (detail) setDetail(null);
       else if (drawerOpen) setDrawerOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [checkoutOpen, detail, drawerOpen]);
+  }, [checkoutOpen, detail, drawerOpen, setDrawerOpen]);
 
   const openCheckout = () => {
     if (lines.length === 0) return;
     setDrawerOpen(false);
     setCheckoutOpen(true);
   };
-
-  const checkoutDone = () => setCart([]);
 
   const resetFilters = () => {
     setQuery("");
@@ -152,46 +144,37 @@ function Store() {
   };
 
   return (
-    <div id="top" className="relative min-h-screen">
-      <BackgroundFX />
-      <NoiseLayer />
+    <>
+      <main>
+        <Masthead onOpen={setDetail} onAdmin={onAdmin} />
+        <FilterBar
+          query={query}
+          onQuery={setQuery}
+          category={category}
+          onCategory={setCategory}
+          sort={sort}
+          onSort={setSort}
+          counts={counts}
+          total={filtered.length}
+        />
+        <Shelf
+          products={filtered}
+          onOpen={setDetail}
+          onAdd={(p) => addToCart(p)}
+          onReset={resetFilters}
+          filtered={isFiltered}
+        />
+        <AboutBand />
+      </main>
 
-      <div className="relative z-10">
-        <Ticker />
-        <Header cartCount={cartCount} onCartOpen={() => setDrawerOpen(true)} />
+      <Footer onToast={toast} />
 
-        <main>
-          <Masthead onOpen={setDetail} />
-          <FilterBar
-            query={query}
-            onQuery={setQuery}
-            category={category}
-            onCategory={setCategory}
-            sort={sort}
-            onSort={setSort}
-            counts={counts}
-            total={filtered.length}
-          />
-          <Shelf
-            products={filtered}
-            onOpen={setDetail}
-            onAdd={(p) => addToCart(p)}
-            onReset={resetFilters}
-            filtered={isFiltered}
-          />
-          <LedgerBand />
-        </main>
-
-        <Footer onToast={toast} />
-      </div>
-
-      {/* overlays */}
       {detail && (
         <ProductDetail
           product={detail}
           onClose={() => setDetail(null)}
-          onAdd={(p, w, g, q) => {
-            addToCart(p, w, g, q);
+          onAdd={(p, q) => {
+            addToCart(p, q);
             setDetail(null);
           }}
         />
@@ -210,18 +193,67 @@ function Store() {
         open={checkoutOpen}
         lines={lines}
         onClose={() => setCheckoutOpen(false)}
-        onComplete={checkoutDone}
+        onPlaced={() => setCart([])}
       />
 
       <Toasts toasts={toasts} />
+    </>
+  );
+}
+
+function Shell() {
+  const [view, setView] = useState<ViewKey>(() =>
+    window.location.hash.includes("ledger") || window.location.hash.includes("admin") ? "admin" : "shop",
+  );
+  const [adminTab, setAdminTab] = useState<TabKey>(() =>
+    window.location.hash.includes("ledger") ? "ledger" : "dashboard",
+  );
+  const [cart, setCart] = useLocalStorage<CartItem[]>("kashan-cart-v2", []);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [view]);
+
+  return (
+    <div id="top" className="relative min-h-screen">
+      <BackgroundFX />
+      <NoiseLayer />
+
+      <div className="relative z-10">
+        <Ticker />
+        <Header
+          view={view}
+          onView={setView}
+          cartCount={cartCount}
+          onCartOpen={() => setDrawerOpen(true)}
+        />
+
+        {view === "shop" ? (
+          <Storefront
+            cart={cart}
+            setCart={setCart}
+            drawerOpen={drawerOpen}
+            setDrawerOpen={setDrawerOpen}
+            onAdmin={() => {
+              setAdminTab("dashboard");
+              setView("admin");
+            }}
+          />
+        ) : (
+          <AdminPanel tab={adminTab} onTab={setAdminTab} />
+        )}
+      </div>
     </div>
   );
 }
 
 export default function App() {
   return (
-    <I18nProvider>
-      <Store />
-    </I18nProvider>
+    <AppStoreProvider>
+      <Shell />
+    </AppStoreProvider>
   );
 }
