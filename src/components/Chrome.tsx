@@ -264,7 +264,7 @@ export function Footer({ onToast }: { onToast: (msg: string) => void }) {
             © {faDigits(1404)} {BUSINESS.name} — تمام حقوق محفوظ است.
           </p>
           <p className="font-mono text-[11px] tracking-[0.12em] text-cream-700">
-            نسخهٔ نمایشی · داده‌ها آزمایشی و قابل ویرایش از پنل مدیریت هستند
+            نسخهٔ نمایشی · <span className="text-ember-500">Kashan Coffee v2</span> · داده‌ها آزمایشی و قابل ویرایش از پنل مدیریت هستند
           </p>
         </div>
       </div>
