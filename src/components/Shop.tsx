@@ -1,14 +1,15 @@
-import { useEffect, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  PRODUCTS,
-  MASTHEAD_IMG,
-  CATEGORY_KEYS,
-  priceFor,
+  HERO_IMG,
+  CATEGORIES,
+  CATEGORY_LABEL,
   type Product,
-  type CategoryKey,
+  type ProductCategory,
 } from "../data/products";
+import { BUSINESS, SUPPLIERS, CUSTOMERS } from "../data/business";
+import { faDigits, formatToman } from "../lib/format";
 import { Reveal } from "../lib/hooks";
-import { useI18n, type TKey } from "../i18n";
+import { useStore } from "../lib/store";
 import {
   BeanIcon,
   ArrowRightIcon,
@@ -16,24 +17,16 @@ import {
   CloseIcon,
   PlusIcon,
   CheckIcon,
-  StarIcon,
   FlameIcon,
   GlobeIcon,
   KettleIcon,
   DropIcon,
   SlidersIcon,
-  RoastMeter,
   CupIcon,
 } from "./Icons";
+import { AlertIcon } from "./AdminIcons";
 
-const CAT_LABEL: Record<CategoryKey, TKey> = {
-  single: "catSingle",
-  blend: "catBlend",
-  espresso: "catEspresso",
-  decaf: "catDecaf",
-};
-
-/* ---------------- animated steam ---------------- */
+/* ---------------- بخار متحرک ---------------- */
 export function Steam({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 60 60" className={`steam ${className}`} fill="none" aria-hidden="true">
@@ -44,70 +37,72 @@ export function Steam({ className = "" }: { className?: string }) {
   );
 }
 
-/* ---------------- masthead ---------------- */
-export function Masthead({ onOpen }: { onOpen: (p: Product) => void }) {
-  const { t, bi, money, lang, num } = useI18n();
+/* ---------------- سرصفحه ---------------- */
+export function Masthead({ onOpen, onAdmin }: { onOpen: (p: Product) => void; onAdmin: () => void }) {
+  const { products } = useStore();
+  const featured = useMemo(
+    () => products.filter((p) => p.category !== "drink").slice(0, 8),
+    [products],
+  );
   const [idx, setIdx] = useState(0);
   const timer = useRef<number | null>(null);
 
   useEffect(() => {
-    timer.current = window.setInterval(() => setIdx((i) => (i + 1) % PRODUCTS.length), 4600);
+    if (featured.length === 0) return;
+    timer.current = window.setInterval(() => setIdx((i) => (i + 1) % featured.length), 4600);
     return () => {
       if (timer.current) window.clearInterval(timer.current);
     };
-  }, []);
+  }, [featured.length]);
 
-  const current = PRODUCTS[idx];
+  const current = featured[idx % Math.max(1, featured.length)];
 
   return (
     <section className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-10 sm:pt-16 pb-14">
       <div className="grid items-stretch gap-8 lg:grid-cols-[1.12fr_0.88fr]">
-        {/* left — the manifesto */}
         <div className="flex flex-col justify-center">
           <Reveal>
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-[0.26em] text-ember-500">
-              <span>{t("mEyebrow")}</span>
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] tracking-[0.2em] text-ember-500">
+              <span>{BUSINESS.name}</span>
               <span className="h-px w-8 bg-ember-500/50" />
-              <span className="text-cream-600">{t("mLoc")}</span>
+              <span className="text-cream-600">جاده امیرکبیر، کاشان</span>
             </p>
           </Reveal>
 
-          <h1 className="mt-6 font-display text-cream-100 font-semibold tracking-[-0.02em] leading-[0.99] text-[clamp(2.9rem,7.2vw,5.6rem)]">
-            <span className="mask-line" style={{ "--d": "80ms" } as CSSProperties}>
-              <span>{t("mLine1")}</span>
+          <h1 className="mt-6 font-display text-cream-100 leading-[1.15] text-[clamp(2.6rem,7vw,5rem)]">
+            <span className="mask-line" style={{ "--d": "80ms" } as React.CSSProperties}>
+              <span>دانهٔ مرغوب،</span>
             </span>
-            <span className="mask-line" style={{ "--d": "220ms" } as CSSProperties}>
+            <span className="mask-line" style={{ "--d": "220ms" } as React.CSSProperties}>
               <span>
-                {lang === "en" ? (
-                  <>One <em className="not-italic font-light italic text-ember-400">12-kilo</em> drum.</>
-                ) : (
-                  <>یک درام <em className="not-italic font-light text-ember-400">دوازده‌کیلویی</em>.</>
-                )}
+                رستِ <em className="not-italic text-ember-400">تازه</em>،
               </span>
             </span>
-            <span className="mask-line" style={{ "--d": "360ms" } as CSSProperties}>
-              <span className="text-cream-400">{t("mLine3")}</span>
+            <span className="mask-line" style={{ "--d": "360ms" } as React.CSSProperties}>
+              <span className="text-cream-400">به سبکِ کاشان.</span>
             </span>
           </h1>
 
           <Reveal delay={200}>
             <p className="mt-6 max-w-lg text-base sm:text-lg leading-relaxed text-cream-500">
-              {t("mPara")}
+              از دانهٔ سبز تا فنجان شما؛ دانه‌ها هر هفته در مجموعه رست می‌شوند و همان
+              روز به دست مشتری می‌رسند. فروش خرده برای خانه و فروش عمده برای کافه‌ها،
+              رستوران‌ها و هتل‌های کاشان.
             </p>
           </Reveal>
 
           <Reveal delay={320}>
-            <dl className="mt-9 grid grid-cols-2 sm:grid-cols-4 border-y border-cream-100/10 divide-x divide-cream-100/10 rtl:divide-x-reverse max-w-xl">
-              {([
-                ["mStat1v", "mStat1l"],
-                ["mStat2v", "mStat2l"],
-                ["mStat3v", "mStat3l"],
-                ["mStat4v", "mStat4l"],
-              ] as [TKey, TKey][]).map(([v, l], i) => (
-                <div key={l} className={`py-4 pe-4 ${i === 0 ? "ps-0" : "ps-4 sm:ps-5"}`}>
-                  <dt className="sr-only">{t(l)}</dt>
-                  <dd className="font-display text-2xl sm:text-[1.7rem] font-semibold text-cream-100">{t(v)}</dd>
-                  <dd className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.18em] text-cream-600">{t(l)}</dd>
+            <dl className="mt-9 grid grid-cols-2 sm:grid-cols-4 border-y border-cream-100/10 divide-x divide-x-reverse divide-cream-100/10 max-w-xl">
+              {[
+                [faDigits(products.length), "محصول فعال"],
+                [faDigits(SUPPLIERS.length), "تأمین‌کننده"],
+                [faDigits(CUSTOMERS.filter((c) => c.type === "wholesale").length), "مشتری عمده"],
+                ["همان روز", "ارسال در کاشان"],
+              ].map(([v, l]) => (
+                <div key={l} className="py-4 ps-4 sm:ps-5 first:ps-0">
+                  <dt className="sr-only">{l}</dt>
+                  <dd className="font-display text-2xl sm:text-[1.6rem] text-cream-100">{v}</dd>
+                  <dd className="mt-0.5 font-mono text-[10px] tracking-[0.14em] text-cream-600">{l}</dd>
                 </div>
               ))}
             </dl>
@@ -119,74 +114,70 @@ export function Masthead({ onOpen }: { onOpen: (p: Product) => void }) {
                 href="#shelf"
                 className="group inline-flex items-center gap-2.5 rounded-full bg-ember-500 px-6 py-3 text-sm font-bold text-roast-950 transition-all duration-300 hover:bg-ember-400 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-10px_rgba(225,154,56,0.55)] active:translate-y-0"
               >
-                {t("mCta1")}
-                <ArrowRightIcon size={16} className="transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 rtl:-scale-x-100" />
+                مشاهدهٔ محصولات
+                <ArrowRightIcon size={16} className="transition-transform duration-300 group-hover:-translate-x-1" />
               </a>
-              <a
-                href="#ledger"
-                className="inline-flex items-center gap-2 rounded-full border border-cream-100/15 px-6 py-3 text-sm font-semibold text-cream-300 transition-all duration-300 hover:border-ember-500/50 hover:text-ember-400"
+              <button
+                onClick={onAdmin}
+                className="inline-flex items-center gap-2 rounded-full border border-cream-100/15 px-6 py-3 text-sm font-semibold text-cream-300 transition-all duration-300 hover:border-ember-500/50 hover:text-ember-400 cursor-pointer"
               >
-                {t("mCta2")}
-              </a>
+                پنل مدیریت مجموعه
+              </button>
             </div>
           </Reveal>
         </div>
 
-        {/* right — on the bar */}
+        {/* پیشنهاد امروز */}
         <Reveal delay={250} className="h-full">
           <div className="group relative h-full min-h-[420px] lg:min-h-0 overflow-hidden rounded-[14px] border border-cream-100/10">
             <div className="absolute inset-0 overflow-hidden">
-              <img
-                src={MASTHEAD_IMG}
-                alt={bi({ en: "Pour-over coffee brewing on the bar at Ember & Oak", fa: "دم قهوه به روش کم‌اُور روی بار امبر و اوک" })}
-                className="kenburns h-full w-full object-cover"
-              />
+              <img src={HERO_IMG} alt="آماده‌سازی قهوه در مجموعه قهوه کاشان" className="kenburns h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-roast-950 via-roast-950/35 to-roast-950/10" />
             </div>
 
-            <Steam className="absolute end-6 top-5 h-14 w-14 text-cream-200/70" />
+            <Steam className="absolute left-6 top-5 h-14 w-14 text-cream-200/70" />
 
-            <div className="absolute top-5 start-5 flex items-center gap-2 rounded-full bg-roast-950/70 backdrop-blur-sm border border-cream-100/12 px-3.5 py-1.5">
+            <div className="absolute top-5 right-5 flex items-center gap-2 rounded-full bg-roast-950/70 backdrop-blur-sm border border-cream-100/12 px-3.5 py-1.5">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember-500 opacity-60" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-ember-500" />
               </span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-cream-300">{t("barToday")}</span>
+              <span className="font-mono text-[10px] tracking-[0.16em] text-cream-300">پیشنهاد امروز</span>
             </div>
 
             <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
-              <div
-                key={current.id}
-                className="ticket-swap cursor-pointer rounded-[12px] border border-cream-100/12 bg-roast-900/85 backdrop-blur-md p-4 sm:p-5 transition-colors hover:border-ember-500/50"
-                onClick={() => onOpen(current)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && onOpen(current)}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-ember-500">
-                    {t("ticket")} {lang === "fa" ? num(idx + 1).padStart(2, "۰") : String(idx + 1).padStart(2, "0")} · {t(CAT_LABEL[current.category])}
-                  </p>
-                  <div className="flex gap-1.5" aria-hidden="true">
-                    {PRODUCTS.map((_, i) => (
-                      <span
-                        key={i}
-                        className={`h-1 rounded-full transition-all duration-500 ${i === idx ? "w-5 bg-ember-500" : "w-2.5 bg-cream-100/25"}`}
-                      />
-                    ))}
+              {current && (
+                <div
+                  key={current.id}
+                  className="ticket-swap cursor-pointer rounded-[12px] border border-cream-100/12 bg-roast-900/85 backdrop-blur-md p-4 sm:p-5 transition-colors hover:border-ember-500/50"
+                  onClick={() => onOpen(current)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === "Enter" && onOpen(current)}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-mono text-[10px] tracking-[0.18em] text-ember-500">
+                      {CATEGORY_LABEL[current.category]} · {current.pack}
+                    </p>
+                    <div className="flex gap-1.5" aria-hidden="true">
+                      {featured.map((_, i) => (
+                        <span
+                          key={i}
+                          className={`h-1 rounded-full transition-all duration-500 ${i === idx % featured.length ? "w-5 bg-ember-500" : "w-2.5 bg-cream-100/25"}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <h3 className="mt-2.5 font-display text-2xl text-cream-100">{current.name}</h3>
+                  <p className="mt-1.5 text-sm text-cream-500 line-clamp-2">{current.desc}</p>
+                  <div className="mt-3.5 flex items-center justify-between">
+                    <span className="font-display text-lg text-ember-400">{formatToman(current.price)}</span>
+                    <span className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.12em] text-cream-400 transition-colors group-hover:text-ember-400">
+                      مشاهدهٔ محصول <ArrowRightIcon size={13} />
+                    </span>
                   </div>
                 </div>
-                <h3 className="mt-2.5 font-display text-2xl font-semibold text-cream-100">{bi(current.name)}</h3>
-                <p className="mt-1.5 text-sm text-cream-500">
-                  {current.notes.map((n) => bi(n)).join(" · ")}
-                </p>
-                <div className="mt-3.5 flex items-center justify-between">
-                  <span className="font-display text-lg font-semibold text-ember-400">{money(current.price)}</span>
-                  <span className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-cream-400 group-hover:text-ember-400 transition-colors">
-                    {t("viewTicket")} <ArrowRightIcon size={13} className="rtl:-scale-x-100" />
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </Reveal>
@@ -195,9 +186,9 @@ export function Masthead({ onOpen }: { onOpen: (p: Product) => void }) {
   );
 }
 
-/* ---------------- filter bar ---------------- */
-export type SortKey = "featured" | "price-asc" | "price-desc" | "roast";
-export type CategorySel = "all" | CategoryKey;
+/* ---------------- نوار فیلتر ---------------- */
+export type SortKey = "featured" | "price-asc" | "price-desc";
+export type CategorySel = "all" | ProductCategory;
 
 export function FilterBar({
   query,
@@ -218,49 +209,47 @@ export function FilterBar({
   counts: Record<string, number>;
   total: number;
 }) {
-  const { t, num } = useI18n();
   return (
     <div className="sticky top-16 z-30 border-y border-cream-100/8 bg-roast-950/85 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col gap-3">
         <div className="flex flex-col md:flex-row md:items-center gap-3">
           <div className="relative flex-1 max-w-md">
-            <SearchIcon size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-cream-600 pointer-events-none" />
+            <SearchIcon size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-cream-600 pointer-events-none" />
             <input
               value={query}
               onChange={(e) => onQuery(e.target.value)}
-              placeholder={t("searchPh")}
-              className="field !ps-10 !pe-9 !py-2.5 !rounded-full !text-sm"
-              aria-label={t("searchAria")}
+              placeholder="جست‌وجوی محصول… مثلاً «عربیکا» یا «سیروپ»"
+              className="field !pr-10 !pl-9 !py-2.5 !rounded-full !text-sm"
+              aria-label="جست‌وجوی محصولات"
             />
             {query && (
               <button
                 onClick={() => onQuery("")}
-                className="absolute end-2.5 top-1/2 -translate-y-1/2 grid place-items-center w-6 h-6 rounded-full text-cream-500 hover:text-cream-100 hover:bg-cream-100/10 transition-colors cursor-pointer"
-                aria-label={t("clearSearch")}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 grid place-items-center w-6 h-6 rounded-full text-cream-500 hover:text-cream-100 hover:bg-cream-100/10 transition-colors cursor-pointer"
+                aria-label="پاک کردن جست‌وجو"
               >
                 <CloseIcon size={13} />
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-3 md:ms-auto">
-            <span className="hidden sm:inline font-mono text-[11px] uppercase tracking-[0.16em] text-cream-600">
-              {t("showing", { n: total, m: PRODUCTS.length })}
+          <div className="flex items-center gap-3 md:mr-auto">
+            <span className="hidden sm:inline font-mono text-[11px] tracking-[0.12em] text-cream-600">
+              {faDigits(total)} از {faDigits(counts.all ?? 0)} محصول
             </span>
             <label className="relative inline-flex items-center">
-              <SlidersIcon size={15} className="absolute start-3 text-cream-600 pointer-events-none" />
+              <SlidersIcon size={15} className="absolute right-3 text-cream-600 pointer-events-none" />
               <select
                 value={sort}
                 onChange={(e) => onSort(e.target.value as SortKey)}
-                className="field !w-auto !ps-9 !pe-8 !py-2 !rounded-full !text-[13px] appearance-none cursor-pointer"
-                aria-label={t("sortAria")}
+                className="field !w-auto !pr-9 !pl-8 !py-2 !rounded-full !text-[13px] appearance-none cursor-pointer"
+                aria-label="مرتب‌سازی محصولات"
               >
-                <option value="featured">{t("sortFeatured")}</option>
-                <option value="price-asc">{t("sortPriceAsc")}</option>
-                <option value="price-desc">{t("sortPriceDesc")}</option>
-                <option value="roast">{t("sortRoast")}</option>
+                <option value="featured">مرتب‌سازی: پیش‌فرض</option>
+                <option value="price-asc">ارزان‌ترین</option>
+                <option value="price-desc">گران‌ترین</option>
               </select>
-              <svg viewBox="0 0 12 8" className="absolute end-3 w-2.5 text-cream-500 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <svg viewBox="0 0 12 8" className="absolute left-3 w-2.5 text-cream-500 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="1.6">
                 <path d="m1 1.5 5 5 5-5" />
               </svg>
             </label>
@@ -268,9 +257,8 @@ export function FilterBar({
         </div>
 
         <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1 pb-0.5">
-          {(["all", ...CATEGORY_KEYS] as CategorySel[]).map((c) => {
+          {CATEGORIES.map((c) => {
             const active = category === c;
-            const label = c === "all" ? t("catAll") : t(CAT_LABEL[c]);
             return (
               <button
                 key={c}
@@ -282,9 +270,9 @@ export function FilterBar({
                 }`}
                 aria-pressed={active}
               >
-                {label}
+                {c === "all" ? "همه" : CATEGORY_LABEL[c]}
                 <span className={`font-mono text-[10px] ${active ? "text-roast-950/70" : "text-cream-600"}`}>
-                  {num(counts[c] ?? 0)}
+                  {faDigits(counts[c] ?? 0)}
                 </span>
               </button>
             );
@@ -295,7 +283,7 @@ export function FilterBar({
   );
 }
 
-/* ---------------- product card ---------------- */
+/* ---------------- کارت محصول ---------------- */
 export function ProductCard({
   product,
   onOpen,
@@ -307,11 +295,13 @@ export function ProductCard({
   onAdd: (p: Product) => void;
   index: number;
 }) {
-  const { t, bi, money } = useI18n();
   const [pulsed, setPulsed] = useState(false);
+  const out = product.category !== "drink" && product.stock <= 0;
+  const low = product.category !== "drink" && !out && product.stock <= product.minStock;
 
-  const handleAdd = (e: ReactMouseEvent) => {
+  const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (out) return;
     onAdd(product);
     setPulsed(true);
     window.setTimeout(() => setPulsed(false), 650);
@@ -320,7 +310,7 @@ export function ProductCard({
   return (
     <Reveal as="article" delay={(index % 3) * 90} className="h-full">
       <div
-        className="group relative flex h-full flex-col overflow-hidden rounded-[13px] border border-cream-100/9 bg-roast-875 transition-all duration-500 hover:-translate-y-1.5 hover:border-ember-500/40 hover:shadow-[0_24px_50px_-20px_rgba(0,0,0,0.7)] cursor-pointer"
+        className={`group relative flex h-full flex-col overflow-hidden rounded-[13px] border border-cream-100/9 bg-roast-875 transition-all duration-500 hover:-translate-y-1.5 hover:border-ember-500/40 hover:shadow-[0_24px_50px_-20px_rgba(0,0,0,0.7)] cursor-pointer ${out ? "opacity-70" : ""}`}
         onClick={() => onOpen(product)}
         role="button"
         tabIndex={0}
@@ -328,90 +318,66 @@ export function ProductCard({
           if (e.key === "Enter") onOpen(product);
         }}
       >
-        <div className="relative aspect-[4/3.4] overflow-hidden">
+        <div className="relative aspect-[4/3.1] overflow-hidden">
           <img
             src={product.img}
-            alt={`${bi(product.name)} — ${bi({ en: "coffee bag", fa: "بستهٔ قهوه" })}`}
+            alt={product.name}
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.06]"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-roast-950/70 via-transparent to-roast-950/10" />
 
-          <div className="absolute top-3 start-3 flex flex-col items-start gap-1.5">
-            {product.badge && (
-              <span
-                className={`rounded-full px-2.5 py-1 font-mono text-[9.5px] uppercase tracking-[0.16em] font-medium ${
-                  product.badge.tone === "leaf"
-                    ? "bg-leaf-500/90 text-roast-950"
-                    : product.badge.tone === "cherry"
-                      ? "bg-cherry-500/90 text-cream-100"
-                      : "bg-ember-500/95 text-roast-950"
-                }`}
-              >
-                {bi(product.badge.label)}
+          <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5">
+            <span className="rounded-full bg-roast-950/75 backdrop-blur-sm border border-cream-100/12 px-2.5 py-1 font-mono text-[9.5px] tracking-[0.1em] text-cream-300">
+              {CATEGORY_LABEL[product.category]}
+            </span>
+            {low && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-roast-950/75 backdrop-blur-sm border border-cherry-500/40 px-2.5 py-1 font-mono text-[9.5px] tracking-[0.1em] text-cherry-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-cherry-400 animate-pulse" />
+                رو به اتمام
               </span>
             )}
-            {product.stock === "low" && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-roast-950/75 backdrop-blur-sm border border-cherry-500/40 px-2.5 py-1 font-mono text-[9.5px] uppercase tracking-[0.14em] text-cherry-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-cherry-400 animate-pulse" />
-                {t("lowStock")}
+            {out && (
+              <span className="rounded-full bg-roast-950/80 border border-cream-100/15 px-2.5 py-1 font-mono text-[9.5px] tracking-[0.1em] text-cream-400">
+                ناموجود
               </span>
             )}
           </div>
 
-          <span className="absolute top-3 end-3 rounded-full bg-roast-950/75 backdrop-blur-sm border border-cream-100/12 px-2.5 py-1 font-mono text-[9.5px] uppercase tracking-[0.14em] text-cream-300">
-            {t("roastTag", { r: bi(product.roastName) })}
-          </span>
-
           <div className="absolute bottom-3 inset-x-3 flex items-center justify-between opacity-0 translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
-            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-cream-300">{t("viewDetails")}</span>
+            <span className="font-mono text-[10px] tracking-[0.14em] text-cream-300">جزئیات محصول</span>
             <span className="grid place-items-center w-7 h-7 rounded-full bg-ember-500 text-roast-950">
-              <ArrowRightIcon size={13} className="rtl:-scale-x-100" />
+              <ArrowRightIcon size={13} />
             </span>
           </div>
         </div>
 
         <div className="flex flex-1 flex-col p-4 sm:p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ember-500/90">
-            {t(CAT_LABEL[product.category])} · {bi(product.origin).split("،")[0].split(",")[0]}
+          <p className="font-mono text-[10px] tracking-[0.16em] text-ember-500/90">
+            {product.pack} · {product.unit}
           </p>
-          <h3 className="mt-1.5 font-display text-[1.35rem] leading-tight font-semibold text-cream-100 transition-colors group-hover:text-ember-300">
-            {bi(product.name)}
+          <h3 className="mt-1.5 font-display text-[1.3rem] leading-tight text-cream-100 transition-colors group-hover:text-ember-300">
+            {product.name}
           </h3>
 
-          <div className="mt-2.5 flex flex-wrap gap-1.5">
-            {product.notes.map((n) => (
-              <span key={n.en} className="rounded-full border border-cream-100/10 bg-roast-900/60 px-2.5 py-0.5 text-[11.5px] text-cream-400">
-                {bi(n)}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-3.5 flex items-center gap-2.5 text-ember-400">
-            <RoastMeter level={product.roast} />
-            <span className="flex items-center gap-1 text-cream-500 text-xs">
-              <StarIcon size={12} className="text-ember-400" />
-              {product.rating.toFixed(1)}
-              <span className="text-cream-700">({product.reviews})</span>
-            </span>
-          </div>
+          <p className="mt-2 text-[12.5px] leading-relaxed text-cream-500 line-clamp-2">{product.desc}</p>
 
           <div className="mt-auto pt-4 flex items-center justify-between">
             <div>
-              <span className="font-display text-xl font-semibold text-cream-100">{money(product.price)}</span>
-              <span className="ms-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-cream-600">{t("per250")}</span>
+              <span className="font-display text-xl text-cream-100">{formatToman(product.price)}</span>
             </div>
             <button
               onClick={handleAdd}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] font-bold transition-all duration-300 cursor-pointer active:scale-95 ${
+              disabled={out}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] font-bold transition-all duration-300 cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
                 pulsed
                   ? "add-pulse border-ember-500 bg-ember-500 text-roast-950"
                   : "border-ember-500/50 text-ember-400 hover:bg-ember-500 hover:text-roast-950"
               }`}
-              aria-label={t("addAria", { name: bi(product.name) })}
+              aria-label={`افزودن ${product.name} به سبد`}
             >
               {pulsed ? <CheckIcon size={14} /> : <PlusIcon size={14} />}
-              {pulsed ? t("added") : t("add")}
+              {pulsed ? "اضافه شد" : "افزودن"}
             </button>
           </div>
         </div>
@@ -420,7 +386,7 @@ export function ProductCard({
   );
 }
 
-/* ---------------- shelf section ---------------- */
+/* ---------------- قفسهٔ محصولات ---------------- */
 export function Shelf({
   products,
   onOpen,
@@ -434,19 +400,20 @@ export function Shelf({
   onReset: () => void;
   filtered: boolean;
 }) {
-  const { t } = useI18n();
   return (
     <section id="shelf" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 scroll-mt-36">
       <Reveal>
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-ember-500">{t("sEyebrow")}</p>
-            <h2 className="mt-2.5 font-display text-3xl sm:text-[2.6rem] font-semibold text-cream-100 tracking-tight leading-tight">
-              {t("sTitleA")} <em className="italic font-light text-ember-400">{t("sTitleB")}</em>
+            <p className="font-mono text-[11px] tracking-[0.2em] text-ember-500">۰۱ — قفسهٔ فروشگاه</p>
+            <h2 className="mt-2.5 font-display text-3xl sm:text-[2.4rem] text-cream-100 leading-tight">
+              محصولات <em className="text-ember-400">این هفته</em>
             </h2>
           </div>
           <p className="max-w-xs text-sm text-cream-500 leading-relaxed">
-            {filtered ? t("sSideFiltered") : t("sSideDefault")}
+            {filtered
+              ? "نتایج جست‌وجو و فیلترهای شما از میان محصولات مجموعه."
+              : "دانه‌های تازهٔ رست، پودرهای آماده، سیروپ و تجهیزات — همه با قیمت تومان و ارسال در کاشان."}
           </p>
         </div>
       </Reveal>
@@ -455,13 +422,15 @@ export function Shelf({
         <Reveal className="mt-10">
           <div className="rounded-[13px] border border-dashed border-cream-100/15 bg-roast-900/50 px-6 py-16 text-center">
             <CupIcon size={40} className="mx-auto text-cream-600" />
-            <h3 className="mt-4 font-display text-2xl font-semibold text-cream-200">{t("emptyTitle")}</h3>
-            <p className="mt-2 text-sm text-cream-500 max-w-sm mx-auto">{t("emptyBody")}</p>
+            <h3 className="mt-4 font-display text-2xl text-cream-200">چیزی پیدا نشد</h3>
+            <p className="mt-2 text-sm text-cream-500 max-w-sm mx-auto">
+              محصولی با این مشخصات در قفسه نیست. عبارت دیگری مثل «عربیکا» را امتحان کنید یا فیلترها را پاک کنید.
+            </p>
             <button
               onClick={onReset}
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-ember-500 px-5 py-2.5 text-sm font-bold text-roast-950 transition-all hover:bg-ember-400 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
             >
-              {t("emptyCta")}
+              پاک کردن جست‌وجو و فیلترها
             </button>
           </div>
         </Reveal>
@@ -476,47 +445,67 @@ export function Shelf({
   );
 }
 
-/* ---------------- ledger band ---------------- */
-const LEDGER_ROWS: { n: string; icon: typeof FlameIcon; title: TKey; body: TKey }[] = [
-  { n: "01", icon: FlameIcon, title: "l1t", body: "l1b" },
-  { n: "02", icon: DropIcon, title: "l2t", body: "l2b" },
-  { n: "03", icon: GlobeIcon, title: "l3t", body: "l3b" },
-  { n: "04", icon: KettleIcon, title: "l4t", body: "l4b" },
+/* ---------------- چرا ما (دفتر افتخارات مجموعه) ---------------- */
+const REASONS = [
+  {
+    n: "۰۱",
+    icon: FlameIcon,
+    title: "رست تازهٔ هفتگی",
+    body: "دانه‌ها هر دوشنبه و پنجشنبه رست می‌شوند و تاریخ رست روی هر بسته درج می‌شود؛ قهوهٔ مانده در کار ما نیست.",
+  },
+  {
+    n: "۰۲",
+    icon: DropIcon,
+    title: "تأمین مستقیم و شفاف",
+    body: "با هفت بازرگانی معتبر در تهران، اصفهان و کاشان کار می‌کنیم و دانهٔ هر فصل را پیش از خرید، کاپینگ می‌کنیم.",
+  },
+  {
+    n: "۰۳",
+    icon: GlobeIcon,
+    title: "فروش عمده به کافه‌ها",
+    body: "برای کافه‌ها، رستوران‌ها، هتل‌ها و فروشگاه‌های کاشان قیمت عمده، ارسال منظم و پشتیبانی دم‌آوری داریم.",
+  },
+  {
+    n: "۰۴",
+    icon: KettleIcon,
+    title: "همراهی بعد از خرید",
+    body: "تنظیم آسیاب، نسبت دم و روش درست هر نوشیدنی را رایگان آموزش می‌دهیم؛ تلفنی یا حضوری در مجموعه.",
+  },
 ];
 
-export function LedgerBand() {
-  const { t, lang, num } = useI18n();
+export function AboutBand() {
   return (
     <section id="ledger" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 scroll-mt-24">
       <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr]">
         <Reveal className="lg:sticky lg:top-40 lg:self-start">
-          <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-ember-500">{t("lEyebrow")}</p>
-          <h2 className="mt-2.5 font-display text-3xl sm:text-[2.6rem] font-semibold text-cream-100 tracking-tight leading-[1.05]">
-            {lang === "en" ? (
-              <>The ledger we keep <em className="italic font-light text-ember-400">honest.</em></>
-            ) : (
-              <>دفتری که <em className="font-light text-ember-400">صادقانه</em> نگه می‌داریم.</>
-            )}
+          <p className="font-mono text-[11px] tracking-[0.2em] text-ember-500">۰۲ — چرا مجموعه قهوه کاشان؟</p>
+          <h2 className="mt-2.5 font-display text-3xl sm:text-[2.4rem] text-cream-100 leading-[1.2]">
+            دفتری که رویش
+            <br />
+            <em className="text-ember-400">حساب</em> می‌شود.
           </h2>
-          <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-cream-500">{t("lPara")}</p>
+          <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-cream-500">
+            قهوه برای ما فقط کالا نیست؛ اعتبار ماست. چهار اصلی که از روز اولِ راه‌اندازی
+            در جاده امیرکبیر، زیرشان را امضا کرده‌ایم.
+          </p>
           <div className="mt-7 inline-flex items-center gap-2.5 rounded-full border border-cream-100/12 px-4 py-2 text-cream-400">
             <BeanIcon size={15} className="text-ember-500" />
-            <span className="font-mono text-[11px] uppercase tracking-[0.18em]">{t("lAudit")}</span>
+            <span className="font-mono text-[11px] tracking-[0.14em]">مدیریت: {BUSINESS.manager}</span>
           </div>
         </Reveal>
 
         <div className="border-t border-cream-100/10">
-          {LEDGER_ROWS.map((row, i) => (
+          {REASONS.map((row, i) => (
             <Reveal key={row.n} delay={i * 80}>
               <div className="group grid grid-cols-[auto_1fr_auto] items-start gap-4 sm:gap-6 border-b border-cream-100/10 py-6 sm:py-7 px-2 sm:px-4 transition-all duration-300 hover:bg-roast-875/80 hover:px-5 sm:hover:px-6 rounded-[10px]">
-                <span className="font-mono text-sm text-ember-500 pt-1">{num(i + 1).padStart(2, lang === "fa" ? "۰" : "0")}</span>
+                <span className="font-mono text-sm text-ember-500 pt-1">{row.n}</span>
                 <div>
-                  <h3 className="font-display text-xl sm:text-[1.45rem] font-semibold text-cream-100 group-hover:text-ember-300 transition-colors">
-                    {t(row.title)}
+                  <h3 className="font-display text-xl sm:text-[1.35rem] text-cream-100 group-hover:text-ember-300 transition-colors">
+                    {row.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-cream-500 max-w-lg">{t(row.body)}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-cream-500 max-w-lg">{row.body}</p>
                 </div>
-                <span className="grid place-items-center w-11 h-11 rounded-full border border-cream-100/12 text-ember-400 transition-all duration-500 group-hover:border-ember-500/60 group-hover:bg-ember-500 group-hover:text-roast-950 group-hover:rotate-6 mt-1">
+                <span className="grid place-items-center w-11 h-11 rounded-full border border-cream-100/12 text-ember-400 transition-all duration-500 group-hover:border-ember-500/60 group-hover:bg-ember-500 group-hover:text-roast-950 group-hover:-rotate-6 mt-1">
                   <row.icon size={19} />
                 </span>
               </div>
@@ -524,6 +513,26 @@ export function LedgerBand() {
           ))}
         </div>
       </div>
+
+      {/* نوار تأمین‌کنندگان */}
+      <Reveal className="mt-14">
+        <div className="rounded-[13px] border border-cream-100/10 bg-roast-900/50 p-5 sm:p-6">
+          <p className="flex items-center gap-2 font-mono text-[11px] tracking-[0.18em] text-cream-500">
+            <AlertIcon size={14} className="text-ember-500" />
+            تأمین‌کنندگان رسمی مجموعه
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2.5">
+            {SUPPLIERS.map((s) => (
+              <span
+                key={s.id}
+                className="rounded-full border border-cream-100/12 bg-roast-875/70 px-4 py-1.5 text-[12.5px] text-cream-400 transition-colors hover:border-ember-500/40 hover:text-ember-300"
+              >
+                {s.name} <span className="text-cream-700">· {s.city}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </Reveal>
     </section>
   );
 }
