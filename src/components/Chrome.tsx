@@ -118,6 +118,13 @@ export function Header({
             چرا ما
           </a>
           <a
+            href="#about"
+            onClick={() => goShopSection("about")}
+            className="relative py-1 transition-colors hover:text-ember-400 after:absolute after:right-0 after:-bottom-0.5 after:h-px after:w-0 after:bg-ember-500 after:transition-all after:duration-300 hover:after:w-full"
+          >
+            درباره ما
+          </a>
+          <a
             href="#visit"
             onClick={() => goShopSection("visit")}
             className="relative py-1 transition-colors hover:text-ember-400 after:absolute after:right-0 after:-bottom-0.5 after:h-px after:w-0 after:bg-ember-500 after:transition-all after:duration-300 hover:after:w-full"
