@@ -24,7 +24,7 @@ import {
   SlidersIcon,
   CupIcon,
 } from "./Icons";
-import { AlertIcon } from "./AdminIcons";
+import { AlertIcon, PencilIcon } from "./AdminIcons";
 
 /* ---------------- بخار متحرک ---------------- */
 export function Steam({ className = "" }: { className?: string }) {
@@ -533,6 +533,69 @@ export function AboutBand() {
           </div>
         </div>
       </Reveal>
+    </section>
+  );
+}
+
+/* ---------------- درباره ما ---------------- */
+export function AboutUs() {
+  return (
+    <section id="about" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 scroll-mt-24">
+      <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] items-start">
+        {/* ستون عنوان */}
+        <Reveal className="lg:sticky lg:top-40 lg:self-start">
+          <p className="font-mono text-[11px] tracking-[0.2em] text-ember-500">۰۳ — درباره ما</p>
+          <h2 className="mt-2.5 font-display text-3xl sm:text-[2.4rem] text-cream-100 leading-[1.2]">
+            پشتِ هر فنجان،
+            <br />
+            یک <em className="text-ember-400">دست</em> و یک دل.
+          </h2>
+          <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-cream-500">
+            مجموعه قهوه کاشان از جاده امیرکبیر شروع شد؛ جایی که عطر دانهٔ تازه با
+            مهمان‌نوازی کاشانی گره خورد. این صفحه، تقدیم به کسانی است که این مسیر را
+            ممکن کردند.
+          </p>
+          <div className="mt-7 inline-flex items-center gap-2.5 rounded-full border border-cream-100/12 px-4 py-2 text-cream-400">
+            <CupIcon size={16} className="text-ember-500" />
+            <span className="font-mono text-[11px] tracking-[0.14em]">با عشق، از کاشان</span>
+          </div>
+        </Reveal>
+
+        {/* کارت اعتبار طراحی */}
+        <Reveal delay={120}>
+          <div className="group relative overflow-hidden rounded-[16px] border border-ember-500/25 bg-roast-900/70 p-6 sm:p-9 transition-all duration-500 hover:border-ember-500/50 hover:-translate-y-1">
+            {/* هالهٔ نور پس‌زمینه */}
+            <div className="pointer-events-none absolute -top-24 -left-24 w-64 h-64 rounded-full bg-ember-500/10 blur-3xl transition-all duration-700 group-hover:bg-ember-500/16" />
+
+            <div className="relative flex items-start gap-4">
+              <span className="grid place-items-center w-12 h-12 shrink-0 rounded-full border border-ember-500/40 bg-ember-500/10 text-ember-400 transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-105">
+                <PencilIcon size={22} />
+              </span>
+              <div>
+                <p className="font-mono text-[11px] tracking-[0.2em] text-ember-500">طراحی و توسعه</p>
+                <h3 className="mt-2 font-display text-2xl sm:text-[1.7rem] text-cream-100 leading-snug">
+                  این سایت توسط صدرا آقایی، از شاگردان خانم دکتر ماه منیر آقایی، طراحی شده است.
+                </h3>
+              </div>
+            </div>
+
+            <div className="relative mt-7 border-t border-dashed border-cream-100/12 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <p className="text-[15px] leading-relaxed text-cream-400">
+                با تشکر از آموزش‌های خوبتان.
+              </p>
+              <div className="flex items-center gap-3 shrink-0">
+                <Steam className="w-8 h-8 text-ember-500/70" />
+                <div className="text-left">
+                  <p className="font-display text-lg text-ember-300 leading-tight">صدرا آقایی</p>
+                  <p className="font-mono text-[10px] tracking-[0.14em] text-cream-600 mt-0.5">
+                    شاگرد خانم دکتر ماه منیر آقایی
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </div>
     </section>
   );
 }

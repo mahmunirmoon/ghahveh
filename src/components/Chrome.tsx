@@ -118,6 +118,13 @@ export function Header({
             چرا ما
           </a>
           <a
+            href="#about"
+            onClick={() => goShopSection("about")}
+            className="relative py-1 transition-colors hover:text-ember-400 after:absolute after:right-0 after:-bottom-0.5 after:h-px after:w-0 after:bg-ember-500 after:transition-all after:duration-300 hover:after:w-full"
+          >
+            درباره ما
+          </a>
+          <a
             href="#visit"
             onClick={() => goShopSection("visit")}
             className="relative py-1 transition-colors hover:text-ember-400 after:absolute after:right-0 after:-bottom-0.5 after:h-px after:w-0 after:bg-ember-500 after:transition-all after:duration-300 hover:after:w-full"
@@ -264,7 +271,7 @@ export function Footer({ onToast }: { onToast: (msg: string) => void }) {
             © {faDigits(1404)} {BUSINESS.name} — تمام حقوق محفوظ است.
           </p>
           <p className="font-mono text-[11px] tracking-[0.12em] text-cream-700">
-            نسخهٔ نمایشی · داده‌ها آزمایشی و قابل ویرایش از پنل مدیریت هستند
+            نسخهٔ نمایشی · <span className="text-ember-500">Kashan Coffee v2</span> · داده‌ها آزمایشی و قابل ویرایش از پنل مدیریت هستند
           </p>
         </div>
       </div>

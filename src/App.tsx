@@ -5,7 +5,7 @@ import { useLocalStorage } from "./lib/hooks";
 import { AppStoreProvider, useStore } from "./lib/store";
 import { BackgroundFX, NoiseLayer, Ticker, Header, Footer, type ViewKey } from "./components/Chrome";
 import {
-  Masthead, FilterBar, Shelf, AboutBand,
+  Masthead, FilterBar, Shelf, AboutBand, AboutUs,
   type SortKey, type CategorySel,
 } from "./components/Shop";
 import {
@@ -165,6 +165,7 @@ function Storefront({
           filtered={isFiltered}
         />
         <AboutBand />
+        <AboutUs />
       </main>
 
       <Footer onToast={toast} />
