@@ -1,0 +1,62 @@
+# ─────────────────────────────────────────────────────────────
+#  Deploy به GitHub Pages
+#  فقط پوشه‌ی dist (خروجی build شده‌ی Vite) آپلود می‌شود —
+#  نه کل ریپازیتوری. base هم از روی نام ریپازیتوری ست می‌شود
+#  تا تمام assetها با پیشوند /ghahveh/ لود شوند.
+# ─────────────────────────────────────────────────────────────
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+# دسترسی‌های موردنیاز actions/deploy-pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# فقط یک deploy هم‌زمان؛ اگر push جدید آمد، قبلی کنسل نشود تا نصفه نماند
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # فلگ --base معادلِ دقیق base در vite.config.js است:
+      # خروجی Pages با پیشوند /ghahveh/ ساخته می‌شود
+      # (نام ریپازیتوری به‌صورت خودکار خوانده می‌شود).
+      - name: Build with Pages base path
+        run: npm run build -- --base=/${{ github.event.repository.name }}/
+
+      # فقط dist — ساخته‌شده توسط Vite — به‌عنوان artifact آپلود می‌شود
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
