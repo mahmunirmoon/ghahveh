@@ -282,3 +282,13 @@ html[dir="rtl"] .drawer-in { animation-name: drawer-in-rtl; }
   .kenburns, .drift-a, .drift-b, .steam path { animation: none; }
   .steam { display: none; }
 }
+
+/* ---------- mobile guards ---------- */
+/* هیچ اسکرول افقی‌ای در هیچ عرضی — clip بر خلاف hidden
+   جای‌گذاری sticky را خراب نمی‌کند */
+html, body { max-width: 100vw; overflow-x: clip; }
+#root { max-width: 100%; overflow-x: clip; }
+/* رسانه‌ها هرگز از ظرف بزرگ‌تر نشوند */
+img, svg, video, canvas { max-width: 100%; }
+/* کلمه‌های طولانی (شماره‌ها و…) نشکنند و بیرون نزنند */
+p, li, dd, dt, a, button, span { overflow-wrap: break-word; }
