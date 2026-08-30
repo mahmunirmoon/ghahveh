@@ -24,7 +24,7 @@ import {
   SlidersIcon,
   CupIcon,
 } from "./Icons";
-import { AlertIcon, PencilIcon } from "./AdminIcons";
+import { AlertIcon, PencilIcon, PhoneIcon } from "./AdminIcons";
 
 /* ---------------- بخار متحرک ---------------- */
 export function Steam({ className = "" }: { className?: string }) {
@@ -69,7 +69,7 @@ export function Masthead({ onOpen, onAdmin }: { onOpen: (p: Product) => void; on
             </p>
           </Reveal>
 
-          <h1 className="mt-6 font-display text-cream-100 leading-[1.15] text-[clamp(2.6rem,7vw,5rem)]">
+          <h1 className="mt-6 font-display text-cream-100 leading-[1.25] text-[clamp(2.15rem,8.5vw,5rem)]">
             <span className="mask-line" style={{ "--d": "80ms" } as React.CSSProperties}>
               <span>دانهٔ مرغوب،</span>
             </span>
@@ -109,17 +109,17 @@ export function Masthead({ onOpen, onAdmin }: { onOpen: (p: Product) => void; on
           </Reveal>
 
           <Reveal delay={430}>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
+            <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4">
               <a
                 href="#shelf"
-                className="group inline-flex items-center gap-2.5 rounded-full bg-ember-500 px-6 py-3 text-sm font-bold text-roast-950 transition-all duration-300 hover:bg-ember-400 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-10px_rgba(225,154,56,0.55)] active:translate-y-0"
+                className="group inline-flex items-center justify-center gap-2.5 rounded-full bg-ember-500 px-6 py-3.5 min-h-[48px] text-sm font-bold text-roast-950 transition-all duration-300 hover:bg-ember-400 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-10px_rgba(225,154,56,0.55)] active:translate-y-0"
               >
                 مشاهدهٔ محصولات
                 <ArrowRightIcon size={16} className="transition-transform duration-300 group-hover:-translate-x-1" />
               </a>
               <button
                 onClick={onAdmin}
-                className="inline-flex items-center gap-2 rounded-full border border-cream-100/15 px-6 py-3 text-sm font-semibold text-cream-300 transition-all duration-300 hover:border-ember-500/50 hover:text-ember-400 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-cream-100/15 px-6 py-3.5 min-h-[48px] text-sm font-semibold text-cream-300 transition-all duration-300 hover:border-ember-500/50 hover:text-ember-400 cursor-pointer"
               >
                 پنل مدیریت مجموعه
               </button>
@@ -563,35 +563,61 @@ export function AboutUs() {
 
         {/* کارت اعتبار طراحی */}
         <Reveal delay={120}>
-          <div className="group relative overflow-hidden rounded-[16px] border border-ember-500/25 bg-roast-900/70 p-6 sm:p-9 transition-all duration-500 hover:border-ember-500/50 hover:-translate-y-1">
+          <div className="group relative overflow-hidden rounded-[16px] border border-ember-500/25 bg-roast-900/70 p-5 sm:p-9 transition-all duration-500 hover:border-ember-500/50 hover:-translate-y-1">
             {/* هالهٔ نور پس‌زمینه */}
             <div className="pointer-events-none absolute -top-24 -left-24 w-64 h-64 rounded-full bg-ember-500/10 blur-3xl transition-all duration-700 group-hover:bg-ember-500/16" />
 
-            <div className="relative flex items-start gap-4">
-              <span className="grid place-items-center w-12 h-12 shrink-0 rounded-full border border-ember-500/40 bg-ember-500/10 text-ember-400 transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-105">
+            <div className="relative flex items-start gap-3.5 sm:gap-4">
+              <span className="grid place-items-center w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-full border border-ember-500/40 bg-ember-500/10 text-ember-400 transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-105">
                 <PencilIcon size={22} />
               </span>
-              <div>
+              <div className="min-w-0">
                 <p className="font-mono text-[11px] tracking-[0.2em] text-ember-500">طراحی و توسعه</p>
-                <h3 className="mt-2 font-display text-2xl sm:text-[1.7rem] text-cream-100 leading-snug">
-                  این سایت توسط صدرا آقایی، از شاگردان خانم دکتر ماه منیر آقایی، طراحی شده است.
+                <h3 className="mt-2 font-display text-xl sm:text-2xl lg:text-[1.7rem] text-cream-100 leading-[1.5] sm:leading-snug">
+                  این سایت توسط هستی صدرایی، از شاگردان خانم دکتر ماه منیر آقایی، طراحی شده است.
                 </h3>
               </div>
             </div>
 
-            <div className="relative mt-7 border-t border-dashed border-cream-100/12 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <p className="text-[15px] leading-relaxed text-cream-400">
-                با تشکر از آموزش‌های خوبتان.
-              </p>
-              <div className="flex items-center gap-3 shrink-0">
-                <Steam className="w-8 h-8 text-ember-500/70" />
-                <div className="text-left">
-                  <p className="font-display text-lg text-ember-300 leading-tight">صدرا آقایی</p>
-                  <p className="font-mono text-[10px] tracking-[0.14em] text-cream-600 mt-0.5">
-                    شاگرد خانم دکتر ماه منیر آقایی
-                  </p>
+            <div className="relative mt-6 sm:mt-7 border-t border-dashed border-cream-100/12 pt-5 sm:pt-6 space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <p className="text-[15px] leading-relaxed text-cream-400">
+                  با تشکر از آموزش‌های خوبتان.
+                </p>
+                <div className="flex items-center gap-3 shrink-0">
+                  <Steam className="w-8 h-8 text-ember-500/70" />
+                  <div className="text-left">
+                    <p className="font-display text-lg text-ember-300 leading-tight">هستی صدرایی</p>
+                    <p className="font-mono text-[10px] tracking-[0.14em] text-cream-600 mt-0.5">
+                      شاگرد خانم دکتر ماه منیر آقایی
+                    </p>
+                  </div>
                 </div>
               </div>
+
+              {/* شماره تماس استاد — قابل لمس برای تماس مستقیم */}
+              <a
+                href="tel:+971551544988"
+                className="group/phone flex items-center justify-between gap-3 rounded-[12px] border border-ember-500/25 bg-ember-500/[0.07] px-4 py-3 transition-all duration-300 hover:border-ember-500/60 hover:bg-ember-500/[0.14] hover:-translate-y-0.5 active:translate-y-0"
+                aria-label="تماس با استاد: 00971551544988"
+              >
+                <span className="flex items-center gap-3 min-w-0">
+                  <span className="grid place-items-center w-10 h-10 shrink-0 rounded-full border border-ember-500/40 bg-ember-500/10 text-ember-400 transition-transform duration-300 group-hover/phone:scale-110 group-hover/phone:-rotate-6">
+                    <PhoneIcon size={16} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block font-mono text-[10px] tracking-[0.16em] text-cream-500">
+                      شماره تماس استاد
+                    </span>
+                    <span dir="ltr" className="block text-left font-mono text-[15px] sm:text-base font-semibold text-cream-100 tracking-[0.04em] mt-0.5 truncate">
+                      00971551544988
+                    </span>
+                  </span>
+                </span>
+                <span className="shrink-0 rounded-full border border-ember-500/30 bg-ember-500/12 px-3.5 py-1.5 font-mono text-[10.5px] tracking-[0.12em] text-ember-300 transition-colors duration-300 group-hover/phone:bg-ember-500 group-hover/phone:text-roast-950">
+                  تماس
+                </span>
+              </a>
             </div>
           </div>
         </Reveal>

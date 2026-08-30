@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
-import { BeanIcon, CartIcon } from "./Icons";
+import { useEffect, useState, type FormEvent } from "react";
+import { BeanIcon, CartIcon, ArrowRightIcon } from "./Icons";
 import { PhoneIcon, MapPinIcon, CashIcon, TrendUpIcon, StoreIcon } from "./AdminIcons";
 import { BUSINESS } from "../data/business";
 import { faDigits } from "../lib/format";
@@ -75,7 +75,10 @@ export function Header({
   cartCount: number;
   onCartOpen: () => void;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const goShopSection = (id: string) => {
+    setMenuOpen(false);
     if (view !== "shop") {
       onView("shop");
       window.setTimeout(
@@ -85,9 +88,22 @@ export function Header({
     }
   };
 
+  /* با تغییر نما، منوی موبایل بسته شود */
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [view]);
+
+  const mobileLinks: { id: string; label: string }[] = [
+    { id: "shelf", label: "قفسهٔ محصولات" },
+    { id: "ledger", label: "چرا ما" },
+    { id: "about", label: "درباره ما" },
+    { id: "visit", label: "تماس و آدرس" },
+  ];
+
   return (
     <header className="sticky top-0 z-40 border-b border-cream-100/8 bg-roast-950/85 backdrop-blur-md">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="h-16 flex items-center justify-between gap-3">
         <a href="#top" className="group flex items-center gap-3 min-w-0">
           <span className="grid place-items-center w-9 h-9 rounded-full border border-ember-500/40 bg-ember-500/10 text-ember-400 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-105 shrink-0">
             <BeanIcon size={18} />
@@ -173,7 +189,53 @@ export function Header({
               )}
             </button>
           )}
+
+          {/* همبرگر — فقط در موبایل و تبلت */}
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            className="lg:hidden grid place-items-center w-10 h-10 rounded-full border border-cream-100/12 bg-roast-850 text-cream-100 transition-all duration-300 hover:border-ember-500/60 hover:bg-roast-800 active:translate-y-0 cursor-pointer"
+            aria-label={menuOpen ? "بستن منو" : "باز کردن منو"}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" className="text-ember-400" aria-hidden="true">
+              {menuOpen ? (
+                <>
+                  <path d="M6 6l12 12" />
+                  <path d="M18 6L6 18" />
+                </>
+              ) : (
+                <>
+                  <path d="M4 7h16" />
+                  <path d="M4 12h16" />
+                  <path d="M4 17h10" />
+                </>
+              )}
+            </svg>
+          </button>
         </div>
+      </div>
+
+      {/* پنل منوی موبایل */}
+      {menuOpen && (
+        <nav
+          id="mobile-menu"
+          className="lg:hidden ticket-swap border-t border-cream-100/8 bg-roast-950/95 backdrop-blur-md pb-3 pt-2"
+          aria-label="منوی موبایل"
+        >
+          {mobileLinks.map((l) => (
+            <a
+              key={l.id}
+              href={`#${l.id}`}
+              onClick={() => goShopSection(l.id)}
+              className="flex items-center justify-between rounded-[10px] px-3 py-3 min-h-[46px] text-[14px] font-semibold text-cream-300 transition-colors hover:bg-ember-500/10 hover:text-ember-300"
+            >
+              {l.label}
+              <ArrowRightIcon size={14} className="text-cream-600 -scale-x-100" />
+            </a>
+          ))}
+        </nav>
+      )}
       </div>
     </header>
   );
