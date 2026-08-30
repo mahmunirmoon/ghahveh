@@ -6,7 +6,7 @@ export const BUSINESS = {
   name: "مجموعه قهوه کاشان",
   shortName: "قهوه کاشان",
   tagline: "فروش، رست و پخش قهوه در کاشان",
-  manager: "سید صدرا آقایی",
+  manager: "هستی صدرایی",
   phone: "09137102426",
   phoneFa: "۰۹۱۳۷۱۰۲۴۲۶",
   phoneIntl: "+98 913 710 2426",
